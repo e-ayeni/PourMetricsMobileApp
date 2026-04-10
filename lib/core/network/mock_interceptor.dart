@@ -5,10 +5,35 @@ import 'package:dio/dio.dart';
 class MockInterceptor extends Interceptor {
   final List<Map<String, dynamic>> _products = List.from(_seedProducts);
   final List<Map<String, dynamic>> _bottles = List.from(_seedBottles);
+  final List<Map<String, dynamic>> _users = [
+    {
+      'id': 'usr-001', 'email': 'admin@pourmetrics.com',
+      'role': 'Admin', 'firstName': 'Alex', 'lastName': 'Barker', 'isActive': true,
+    },
+    {
+      'id': 'usr-002', 'email': 'manager@pourmetrics.com',
+      'role': 'Manager', 'firstName': 'Sam', 'lastName': 'Okafor', 'isActive': true,
+    },
+    {
+      'id': 'usr-003', 'email': 'bartender1@pourmetrics.com',
+      'role': 'Bartender', 'firstName': 'Jess', 'lastName': 'Adeyemi', 'isActive': true,
+    },
+    {
+      'id': 'usr-004', 'email': 'exstaff@pourmetrics.com',
+      'role': 'Bartender', 'firstName': 'Dan', 'lastName': 'Mills', 'isActive': false,
+    },
+  ];
+
+  Map<String, dynamic> _alertConfig = {
+    'oversizeThresholdMl': 50,
+    'afterHoursStart': '23:00',
+    'afterHoursEnd': '06:00',
+    'enabled': true,
+  };
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    final result = _resolve(options.path, options.method, options.data);
+    final result = _resolve(options);
     handler.resolve(Response(
       requestOptions: options,
       statusCode: result.$1,
@@ -16,7 +41,10 @@ class MockInterceptor extends Interceptor {
     ));
   }
 
-  (int, dynamic) _resolve(String path, String method, dynamic body) {
+  (int, dynamic) _resolve(RequestOptions options) {
+    final path = options.path;
+    final method = options.method;
+    final body = options.data;
     // Auth
     if (path.contains('/auth/')) {
       return (200, {'accessToken': 'mock', 'refreshToken': 'mock'});
@@ -69,17 +97,40 @@ class MockInterceptor extends Interceptor {
 
     // Pour events list
     if (path.contains('/pour-events') && method == 'GET') {
-      return (200, List.generate(12, (i) => {
+      // Build a pool of 60 events spread over the last 7 days
+      final pool = List.generate(60, (i) => {
         'id': 'pe-$i',
         'productName': _staticProducts[i % _staticProducts.length],
         'venueName': _venues[i % _venues.length],
-        'volumeMl': 35.0 + (i % 5) * 5,
-        'estimatedRevenue': 8.50 + i * 0.75,
+        'volumeMl': 30.0 + (i % 6) * 5.0,
+        'estimatedRevenue': 7.50 + (i % 8) * 1.25,
         'isOversize': i % 7 == 0,
         'isAfterHours': i % 9 == 0,
-        'timestamp':
-            DateTime.now().subtract(Duration(hours: i * 2)).toIso8601String(),
-      }));
+        'timestamp': DateTime.now()
+            .subtract(Duration(hours: i * 3))
+            .toIso8601String(),
+      });
+
+      // Apply date filters
+      final fromStr = options.queryParameters['from'] as String?;
+      final toStr = options.queryParameters['to'] as String?;
+      final oversizeOnly = options.queryParameters['isOversize'] == 'true';
+      final afterHoursOnly = options.queryParameters['isAfterHours'] == 'true';
+      final page = int.tryParse(options.queryParameters['page']?.toString() ?? '1') ?? 1;
+      const pageSize = 20;
+
+      var filtered = pool.where((e) {
+        final ts = DateTime.parse(e['timestamp'] as String);
+        if (fromStr != null && ts.isBefore(DateTime.parse(fromStr))) return false;
+        if (toStr != null && ts.isAfter(DateTime.parse(toStr))) return false;
+        if (oversizeOnly && e['isOversize'] != true) return false;
+        if (afterHoursOnly && e['isAfterHours'] != true) return false;
+        return true;
+      }).toList();
+
+      final start = ((page - 1) * pageSize).clamp(0, filtered.length);
+      final end = (start + pageSize).clamp(0, filtered.length);
+      return (200, filtered.sublist(start, end));
     }
 
     // Alerts list
@@ -120,14 +171,13 @@ class MockInterceptor extends Interceptor {
       return (200, {});
     }
 
-    // Alert config
-    if (path.contains('/alerts/config') && method == 'GET') {
-      return (200, {
-        'oversizeThresholdMl': 50,
-        'afterHoursStart': '23:00',
-        'afterHoursEnd': '06:00',
-        'enabled': true,
-      });
+    // Alert config GET / PUT
+    if (path.contains('/alerts/config')) {
+      if (method == 'PUT') {
+        _alertConfig = {..._alertConfig, ...(body as Map<String, dynamic>? ?? {})};
+        return (200, _alertConfig);
+      }
+      return (200, _alertConfig);
     }
 
     // ── Products ───────────────────────────────────────────────────────────
@@ -254,18 +304,41 @@ class MockInterceptor extends Interceptor {
 
     // ── Devices ────────────────────────────────────────────────────────────
     if (path.endsWith('/devices') && method == 'GET') {
-      return (200, List.generate(4, (i) => {
-        'id': 'dev-$i',
-        'macAddress': '00:1A:2B:3C:4D:${i.toString().padLeft(2, '0')}',
-        'barLocation': 'Bar ${i + 1}',
-        'coasterName': 'Coaster ${i + 1}',
-        'venueName': _venues[i % _venues.length],
-        'firmwareVersion': '1.4.${i + 2}',
-        'batteryVoltage': 3.7 - i * 0.1,
-        'lastSeenAt':
-            DateTime.now().subtract(Duration(minutes: i * 5)).toIso8601String(),
-        'isActive': true,
-      }));
+      final now = DateTime.now();
+      return (200, [
+        {
+          'id': 'dev-0', 'macAddress': '00:1A:2B:3C:4D:01',
+          'coasterName': 'Coaster 1', 'barLocation': 'Bar 1',
+          'venueName': 'Skybar Rooftop', 'firmwareVersion': '1.4.4',
+          'batteryVoltage': 3.68,
+          'lastSeenAt': now.subtract(const Duration(minutes: 2)).toIso8601String(),
+          'isActive': true,
+        },
+        {
+          'id': 'dev-1', 'macAddress': '00:1A:2B:3C:4D:02',
+          'coasterName': 'Coaster 2', 'barLocation': 'Bar 2',
+          'venueName': 'The Grand Lounge', 'firmwareVersion': '1.4.4',
+          'batteryVoltage': 3.42,
+          'lastSeenAt': now.subtract(const Duration(minutes: 4)).toIso8601String(),
+          'isActive': true,
+        },
+        {
+          'id': 'dev-2', 'macAddress': '00:1A:2B:3C:4D:03',
+          'coasterName': 'Coaster 3', 'barLocation': 'Bar 1',
+          'venueName': 'Skybar Rooftop', 'firmwareVersion': '1.4.3',
+          'batteryVoltage': 3.08,
+          'lastSeenAt': now.subtract(const Duration(minutes: 8)).toIso8601String(),
+          'isActive': true,
+        },
+        {
+          'id': 'dev-3', 'macAddress': '00:1A:2B:3C:4D:04',
+          'coasterName': 'Coaster 4', 'barLocation': 'Bar 4',
+          'venueName': 'Lobby Bar', 'firmwareVersion': '1.4.2',
+          'batteryVoltage': 3.55,
+          'lastSeenAt': now.subtract(const Duration(hours: 2)).toIso8601String(),
+          'isActive': true,
+        },
+      ]);
     }
 
     // Organisation
@@ -297,18 +370,34 @@ class MockInterceptor extends Interceptor {
       });
     }
 
-    // Users
+    // Users — invite
+    if (path.endsWith('/users/invite') && method == 'POST') {
+      final data = body as Map<String, dynamic>? ?? {};
+      final newUser = {
+        'id': 'usr-${_users.length + 1}',
+        'email': data['email'] ?? 'new@example.com',
+        'role': data['role'] ?? 'Bartender',
+        'firstName': '',
+        'lastName': '',
+        'isActive': true,
+      };
+      _users.add(newUser);
+      return (201, newUser);
+    }
+
+    // Users — update role / active (PATCH)
+    if (RegExp(r'/users/[^/]+$').hasMatch(path) && method == 'PATCH') {
+      final id = path.split('/').last;
+      final idx = _users.indexWhere((u) => u['id'] == id);
+      if (idx == -1) return (404, {});
+      final data = body as Map<String, dynamic>? ?? {};
+      _users[idx] = {..._users[idx], ...data};
+      return (200, _users[idx]);
+    }
+
+    // Users — list
     if (path.endsWith('/users') && method == 'GET') {
-      return (200, [
-        {
-          'id': 'usr-001',
-          'email': 'admin@pourmetrics.com',
-          'role': 'Admin',
-          'firstName': 'Alex',
-          'lastName': 'Barker',
-          'isActive': true,
-        },
-      ]);
+      return (200, _users);
     }
 
     return (200, {});

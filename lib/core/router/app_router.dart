@@ -6,12 +6,15 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/pours/presentation/pours_screen.dart';
 import '../../features/alerts/presentation/alerts_screen.dart';
+import '../../features/alerts/presentation/alert_config_screen.dart';
+import '../../features/devices/presentation/devices_screen.dart';
 import '../../features/inventory/presentation/inventory_screen.dart';
 import '../../features/inventory/presentation/add_product_screen.dart';
 import '../../features/inventory/presentation/register_bottle_screen.dart';
 import '../../features/inventory/presentation/bottle_detail_screen.dart';
 import '../../features/inventory/presentation/product_detail_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/users/presentation/users_screen.dart';
 import '../widgets/main_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -60,6 +63,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/alerts',
         builder: (context, state) => const AlertsScreen(),
+      ),
+      GoRoute(
+        path: '/alerts/config',
+        builder: (context, state) => const AlertConfigScreen(),
+      ),
+      GoRoute(
+        path: '/devices',
+        builder: (context, state) => const DevicesScreen(),
+      ),
+      GoRoute(
+        path: '/users',
+        builder: (context, state) => const UsersScreen(),
       ),
       GoRoute(
         path: '/inventory/add-product',

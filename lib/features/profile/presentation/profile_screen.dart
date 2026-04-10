@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/error_view.dart';
@@ -35,6 +36,8 @@ class _ProfileBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isAdmin = ref.watch(authProvider).valueOrNull?.role == 'Admin';
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -77,6 +80,31 @@ class _ProfileBody extends ConsumerWidget {
           value: profile.id,
           mono: true,
         ),
+
+        // ── Admin tools ───────────────────────────────────────────────────
+        if (isAdmin) ...[
+          const SizedBox(height: 28),
+          const Text('Administration', style: AppTextStyles.title),
+          const SizedBox(height: 12),
+          _AdminTile(
+            icon: Icons.sensors,
+            label: 'Smart Coasters',
+            subtitle: 'Device health & battery',
+            onTap: () => context.push('/devices'),
+          ),
+          _AdminTile(
+            icon: Icons.people_outline,
+            label: 'Team',
+            subtitle: 'Invite & manage users',
+            onTap: () => context.push('/users'),
+          ),
+          _AdminTile(
+            icon: Icons.notifications_none_outlined,
+            label: 'Alert Settings',
+            subtitle: 'Thresholds & after-hours window',
+            onTap: () => context.push('/alerts/config'),
+          ),
+        ],
 
         const SizedBox(height: 32),
         const Divider(),
@@ -158,4 +186,33 @@ class _InfoTile extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AdminTile extends StatelessWidget {
+  const _AdminTile({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: AppColors.primaryLight,
+            child: Icon(icon, color: AppColors.primaryDark, size: 20),
+          ),
+          title: Text(label, style: AppTextStyles.body),
+          subtitle: Text(subtitle, style: AppTextStyles.caption),
+          trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
+          onTap: onTap,
+        ),
+      );
 }
