@@ -1,9 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/providers/dio_provider.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/providers/dio_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/inventory_provider.dart';
 import 'detail_widgets.dart';
@@ -73,26 +74,24 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      final dio = ref.read(dioProvider);
-      await dio.put(
-        '${ApiConstants.products}/${widget.productId}',
-        data: {
-          'name': _nameCtrl.text.trim(),
-          'category': _categoryCtrl.text.trim(),
-          'barcode': _barcodeCtrl.text.trim().isEmpty
-              ? null
-              : _barcodeCtrl.text.trim(),
-          'emptyWeightG': double.tryParse(_emptyWeightCtrl.text) ?? 420.0,
-          'fullWeightG': double.tryParse(_fullWeightCtrl.text) ?? 1200.0,
-          'standardPourMl': double.tryParse(_standardPourCtrl.text) ?? 30.0,
-          'sellingPricePerShot':
-              double.tryParse(_sellingPriceCtrl.text) ?? 0.0,
-          'costPricePerBottle': double.tryParse(_costPriceCtrl.text),
-          'currency': _currency,
-        },
-      );
+      final changes = {
+        'name': _nameCtrl.text.trim(),
+        'category': _categoryCtrl.text.trim(),
+        'barcode': _barcodeCtrl.text.trim().isEmpty
+            ? null
+            : _barcodeCtrl.text.trim(),
+        'emptyWeightG': double.tryParse(_emptyWeightCtrl.text) ?? 420.0,
+        'fullWeightG': double.tryParse(_fullWeightCtrl.text) ?? 1200.0,
+        'standardPourMl': double.tryParse(_standardPourCtrl.text) ?? 30.0,
+        'sellingPricePerShot':
+            double.tryParse(_sellingPriceCtrl.text) ?? 0.0,
+        'costPricePerBottle': double.tryParse(_costPriceCtrl.text),
+        'currency': _currency,
+      };
+      await ref
+          .read(productsListProvider.notifier)
+          .updateProduct(widget.productId, changes);
       if (!mounted) return;
-      ref.invalidate(productsListProvider);
       setState(() => _editing = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -115,7 +114,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final isAdmin = ref.watch(authProvider).valueOrNull?.role == 'Admin';
 
-    return FutureBuilder(
+    return FutureBuilder<Response<dynamic>>(
       future: ref
           .read(dioProvider)
           .get('${ApiConstants.products}/${widget.productId}'),

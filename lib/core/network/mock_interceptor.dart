@@ -35,12 +35,35 @@ class MockInterceptor extends Interceptor {
 
     // Pour events summary
     if (path.contains('/pour-events/summary')) {
+      final now = DateTime.now();
+      final currentHour = now.hour;
+      // Generate realistic hourly data from opening (10am) to now
+      final hourlyPours = <Map<String, dynamic>>[];
+      for (int h = 10; h <= currentHour; h++) {
+        final isEveningRush = h >= 20 && h <= 23;
+        final isLunchRush = h >= 12 && h <= 14;
+        final base = isEveningRush ? 18 : isLunchRush ? 12 : 5;
+        final count = base + (h * 3) % 7;
+        hourlyPours.add({
+          'hour': h,
+          'count': count,
+          'revenue': count * 8.50,
+        });
+      }
       return (200, {
         'totalPours': 142,
         'totalRevenue': 3840.50,
         'averageVolumeMl': 38.2,
         'oversizeCount': 7,
         'afterHoursCount': 3,
+        'hourlyPours': hourlyPours,
+        'topProducts': [
+          {'name': 'Jack Daniels',        'pourCount': 38, 'revenue': 323.0},
+          {'name': 'Johnnie Walker Black','pourCount': 29, 'revenue': 275.5},
+          {'name': 'Grey Goose',          'pourCount': 26, 'revenue': 273.0},
+          {'name': 'Patron Silver',       'pourCount': 21, 'revenue': 241.5},
+          {'name': 'Hendricks Gin',       'pourCount': 18, 'revenue': 189.0},
+        ],
       });
     }
 

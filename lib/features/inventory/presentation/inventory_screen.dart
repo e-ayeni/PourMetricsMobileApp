@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/bottle_fill_widget.dart';
 import '../../../core/widgets/error_view.dart';
+import '../../../core/services/queue_status_notifier.dart';
 import '../providers/inventory_provider.dart';
 import 'barcode_scanner_screen.dart';
 
@@ -55,6 +56,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inventory'),
+        actions: [_QueueBadge()],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [Tab(text: 'Bottles'), Tab(text: 'Products')],
@@ -90,10 +92,10 @@ class _BottlesTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorView(
         message: 'Failed to load bottles',
-        onRetry: () => ref.invalidate(bottlesListProvider),
+        onRetry: () => ref.read(bottlesListProvider.notifier).refresh(),
       ),
       data: (bottles) => RefreshIndicator(
-        onRefresh: () async => ref.invalidate(bottlesListProvider),
+        onRefresh: () => ref.read(bottlesListProvider.notifier).refresh(),
         child: bottles.isEmpty
             ? const Center(
                 child: Text('No bottles', style: AppTextStyles.caption))
@@ -218,10 +220,10 @@ class _ProductsTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorView(
         message: 'Failed to load products',
-        onRetry: () => ref.invalidate(productsListProvider),
+        onRetry: () => ref.read(productsListProvider.notifier).refresh(),
       ),
       data: (products) => RefreshIndicator(
-        onRefresh: () async => ref.invalidate(productsListProvider),
+        onRefresh: () => ref.read(productsListProvider.notifier).refresh(),
         child: products.isEmpty
             ? Center(
                 child: Column(
@@ -247,6 +249,39 @@ class _ProductsTab extends ConsumerWidget {
     );
   }
 }
+
+// ── Offline queue badge ───────────────────────────────────────────────────────
+
+class _QueueBadge extends ConsumerWidget {
+  const _QueueBadge();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(queueStatusProvider).valueOrNull ?? 0;
+    if (count == 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: Tooltip(
+        message: '$count change${count == 1 ? '' : 's'} pending sync',
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_upload_outlined,
+                color: AppColors.warning, size: 18),
+            const SizedBox(width: 4),
+            Text(
+              '$count',
+              style: const TextStyle(
+                  color: AppColors.warning, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 
 class _ProductTile extends StatelessWidget {
   const _ProductTile({required this.data});

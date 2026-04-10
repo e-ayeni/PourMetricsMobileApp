@@ -1,10 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/providers/dio_provider.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/providers/dio_provider.dart';
 import '../../../core/widgets/bottle_fill_widget.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/inventory_provider.dart';
@@ -47,13 +48,14 @@ class _BottleDetailScreenState extends ConsumerState<BottleDetailScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      final dio = ref.read(dioProvider);
-      await dio.put(
-        '${ApiConstants.bottles}/${widget.bottleId}',
-        data: {'rfidTag': _rfidCtrl.text.trim(), 'venueId': _selectedVenueId},
-      );
+      final changes = {
+        'rfidTag': _rfidCtrl.text.trim(),
+        'venueId': _selectedVenueId,
+      };
+      await ref
+          .read(bottlesListProvider.notifier)
+          .updateBottle(widget.bottleId, changes);
       if (!mounted) return;
-      ref.invalidate(bottlesListProvider);
       setState(() => _editing = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -93,10 +95,9 @@ class _BottleDetailScreenState extends ConsumerState<BottleDetailScreen> {
     if (confirmed != true || !mounted) return;
     try {
       await ref
-          .read(dioProvider)
-          .delete('${ApiConstants.bottles}/${widget.bottleId}');
+          .read(bottlesListProvider.notifier)
+          .retireBottle(widget.bottleId);
       if (!mounted) return;
-      ref.invalidate(bottlesListProvider);
       context.pop();
     } catch (_) {
       if (!mounted) return;
@@ -112,7 +113,7 @@ class _BottleDetailScreenState extends ConsumerState<BottleDetailScreen> {
   Widget build(BuildContext context) {
     final isAdmin = ref.watch(authProvider).valueOrNull?.role == 'Admin';
 
-    return FutureBuilder(
+    return FutureBuilder<Response<dynamic>>(
       future: ref
           .read(dioProvider)
           .get('${ApiConstants.bottles}/${widget.bottleId}'),

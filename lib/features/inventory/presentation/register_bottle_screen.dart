@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/providers/dio_provider.dart';
+import '../../../core/services/queue_status_notifier.dart';
 import '../providers/inventory_provider.dart';
 
 /// Register a physical bottle: link an RFID tag to a product and venue.
@@ -67,17 +67,24 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
 
     setState(() => _submitting = true);
     try {
-      final dio = ref.read(dioProvider);
-      await registerBottle(dio, {
+      final payload = {
         'productId': _selectedProductId,
         'venueId': _selectedVenueId,
         'rfidTag': _rfidCtrl.text.trim(),
-      });
+      };
+      // Use the notifier so the optimistic update + offline queue are applied.
+      await ref.read(bottlesListProvider.notifier).addBottle(payload);
       if (!mounted) return;
+      final pendingCount =
+          ref.read(queueStatusProvider).valueOrNull ?? 0;
+      final isQueued = pendingCount > 0;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bottle registered successfully'),
-          backgroundColor: AppColors.success,
+        SnackBar(
+          content: Text(isQueued
+              ? 'Saved locally — will sync when online'
+              : 'Bottle registered successfully'),
+          backgroundColor:
+              isQueued ? AppColors.warning : AppColors.success,
         ),
       );
       context.pop();
