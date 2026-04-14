@@ -7,8 +7,7 @@ import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/pours/presentation/pours_screen.dart';
 import '../../features/alerts/presentation/alerts_screen.dart';
 import '../../features/alerts/presentation/alert_config_screen.dart';
-import '../../features/devices/presentation/devices_screen.dart'
-import '../../features/devices/presentation/device_setup_screen.dart'
+import '../../features/devices/presentation/devices_screen.dart';
 import '../../features/devices/presentation/device_setup_screen.dart';
 import '../../features/inventory/presentation/inventory_screen.dart';
 import '../../features/inventory/presentation/add_product_screen.dart';

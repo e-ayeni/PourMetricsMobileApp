@@ -72,7 +72,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        icon: Icon(isBottlesTab ? Icons.nfc : Icons.camera_alt),
+        icon: Icon(isBottlesTab ? Icons.nfc : Icons.inventory_2_outlined),
         label: Text(isBottlesTab ? 'Register Bottle' : 'Add Product'),
         onPressed: _onFabTapped,
       ),
@@ -144,7 +144,10 @@ class _BottleTile extends StatelessWidget {
             children: [
               // Bottle visualisation
               BottleFillWidget(
-                  width: 32, height: 72, fillPercent: fillPct, isRetired: isRetired),
+                  width: 32,
+                  height: 72,
+                  fillPercent: fillPct,
+                  isRetired: isRetired),
               const SizedBox(width: 14),
 
               // Details
@@ -154,7 +157,8 @@ class _BottleTile extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: Text(product, style: AppTextStyles.title)),
+                        Expanded(
+                            child: Text(product, style: AppTextStyles.title)),
                         if (isRetired)
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -311,7 +315,8 @@ class _ProductTile extends StatelessWidget {
                 child: Text(
                   name.isNotEmpty ? name[0].toUpperCase() : '?',
                   style: const TextStyle(
-                      color: AppColors.primaryDark, fontWeight: FontWeight.w700),
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(width: 12),

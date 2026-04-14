@@ -13,6 +13,8 @@ class ApiConstants {
   static const String venues = '/venues';
   static const String devices = '/devices';
   static const String products = '/products';
+  static const String productCalibrationSessions =
+      '/products/calibration-sessions';
   static const String bottles = '/bottles';
   static const String pourEvents = '/pour-events';
   static const String alerts = '/alerts';

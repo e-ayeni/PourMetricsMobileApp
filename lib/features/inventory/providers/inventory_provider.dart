@@ -7,6 +7,45 @@ import '../../../core/services/cache_store.dart';
 import '../../../core/services/offline_queue.dart';
 import '../../../core/services/queue_status_notifier.dart';
 
+const pourToleranceModeOptions = ['FixedMl', 'Percentage', 'Hybrid'];
+
+int pourToleranceModeToApiValue(String mode) {
+  switch (mode) {
+    case 'FixedMl':
+      return 0;
+    case 'Percentage':
+      return 1;
+    case 'Hybrid':
+    default:
+      return 2;
+  }
+}
+
+String normalizePourToleranceMode(dynamic value) {
+  if (value is String && pourToleranceModeOptions.contains(value)) {
+    return value;
+  }
+
+  if (value is num) {
+    final index = value.toInt();
+    if (index >= 0 && index < pourToleranceModeOptions.length) {
+      return pourToleranceModeOptions[index];
+    }
+  }
+
+  return 'Hybrid';
+}
+
+String calibrationStatusLabel(dynamic value) {
+  return switch (value) {
+    'EmptyCaptured' => 'Empty captured',
+    'FullCaptured' => 'Full captured',
+    'Completed' => 'Completed',
+    'Cancelled' => 'Cancelled',
+    _ => 'Started',
+  };
+}
+
 // ── Bottles ───────────────────────────────────────────────────────────────────
 
 class BottlesNotifier extends AsyncNotifier<List<dynamic>> {
@@ -52,8 +91,7 @@ class BottlesNotifier extends AsyncNotifier<List<dynamic>> {
   /// Optimistically adds a bottle; falls back to offline queue if unreachable.
   Future<Map<String, dynamic>> addBottle(Map<String, dynamic> payload) async {
     final snapshot = state.valueOrNull ?? [];
-    final tempId =
-        'optimistic_${DateTime.now().millisecondsSinceEpoch}';
+    final tempId = 'optimistic_${DateTime.now().millisecondsSinceEpoch}';
     final optimistic = {...payload, 'id': tempId};
 
     state = AsyncData([...snapshot, optimistic]);
@@ -181,11 +219,9 @@ class ProductsNotifier extends AsyncNotifier<List<dynamic>> {
 
   /// Optimistically adds a product. Returns the server product (or optimistic
   /// placeholder when offline) so callers can chain bottle registration.
-  Future<Map<String, dynamic>> addProduct(
-      Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> addProduct(Map<String, dynamic> payload) async {
     final snapshot = state.valueOrNull ?? [];
-    final tempId =
-        'optimistic_${DateTime.now().millisecondsSinceEpoch}';
+    final tempId = 'optimistic_${DateTime.now().millisecondsSinceEpoch}';
     final optimistic = {...payload, 'id': tempId};
 
     state = AsyncData([...snapshot, optimistic]);
@@ -289,8 +325,7 @@ final venuesListProvider =
 /// Returns the product map if found, null if 404, throws on other errors.
 Future<Map<String, dynamic>?> lookupBarcode(Dio dio, String barcode) async {
   try {
-    final response =
-        await dio.get('${ApiConstants.products}/barcode/$barcode');
+    final response = await dio.get('${ApiConstants.products}/barcode/$barcode');
     return response.data as Map<String, dynamic>;
   } on DioException catch (e) {
     if (e.response?.statusCode == 404) return null;
@@ -308,5 +343,47 @@ Future<Map<String, dynamic>> createProduct(
 Future<Map<String, dynamic>> registerBottle(
     Dio dio, Map<String, dynamic> payload) async {
   final response = await dio.post(ApiConstants.bottles, data: payload);
+  return response.data as Map<String, dynamic>;
+}
+
+Future<Map<String, dynamic>> startProductCalibration(
+    Dio dio, Map<String, dynamic> payload) async {
+  final response =
+      await dio.post(ApiConstants.productCalibrationSessions, data: payload);
+  return response.data as Map<String, dynamic>;
+}
+
+Future<Map<String, dynamic>> getProductCalibrationSession(
+    Dio dio, String sessionId) async {
+  final response =
+      await dio.get('${ApiConstants.productCalibrationSessions}/$sessionId');
+  return response.data as Map<String, dynamic>;
+}
+
+Future<Map<String, dynamic>> captureProductCalibrationEmpty(
+    Dio dio, String sessionId) async {
+  final response = await dio.post(
+      '${ApiConstants.productCalibrationSessions}/$sessionId/capture-empty');
+  return response.data as Map<String, dynamic>;
+}
+
+Future<Map<String, dynamic>> captureProductCalibrationFull(
+    Dio dio, String sessionId) async {
+  final response = await dio.post(
+      '${ApiConstants.productCalibrationSessions}/$sessionId/capture-full');
+  return response.data as Map<String, dynamic>;
+}
+
+Future<Map<String, dynamic>> completeProductCalibration(
+    Dio dio, String sessionId) async {
+  final response = await dio
+      .post('${ApiConstants.productCalibrationSessions}/$sessionId/complete');
+  return response.data as Map<String, dynamic>;
+}
+
+Future<Map<String, dynamic>> cancelProductCalibration(
+    Dio dio, String sessionId) async {
+  final response = await dio
+      .post('${ApiConstants.productCalibrationSessions}/$sessionId/cancel');
   return response.data as Map<String, dynamic>;
 }
