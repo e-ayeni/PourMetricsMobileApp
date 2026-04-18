@@ -6,20 +6,25 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/services/queue_status_notifier.dart';
 import '../providers/inventory_provider.dart';
 
-/// Register a physical bottle: link an RFID tag to a product and venue.
-/// [prefillProductId] and [prefillRfidTag] can come from the device RFID
-/// placement event (firmware reports an unknown tag → app registers it).
 class RegisterBottleScreen extends ConsumerStatefulWidget {
   const RegisterBottleScreen({
     super.key,
     this.prefillProductId,
     this.prefillProductName,
     this.prefillRfidTag,
+    this.prefillVenueId,
+    this.prefillVenueName,
+    this.prefillDeviceId,
+    this.prefillDeviceName,
   });
 
   final String? prefillProductId;
   final String? prefillProductName;
   final String? prefillRfidTag;
+  final String? prefillVenueId;
+  final String? prefillVenueName;
+  final String? prefillDeviceId;
+  final String? prefillDeviceName;
 
   @override
   ConsumerState<RegisterBottleScreen> createState() =>
@@ -34,14 +39,16 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
   String? _selectedProductId;
   String? _selectedProductName;
   String? _selectedVenueId;
+  String? _selectedVenueName;
 
   @override
   void initState() {
     super.initState();
-    _rfidCtrl =
-        TextEditingController(text: widget.prefillRfidTag ?? '');
+    _rfidCtrl = TextEditingController(text: widget.prefillRfidTag ?? '');
     _selectedProductId = widget.prefillProductId;
     _selectedProductName = widget.prefillProductName;
+    _selectedVenueId = widget.prefillVenueId;
+    _selectedVenueName = widget.prefillVenueName;
   }
 
   @override
@@ -53,15 +60,11 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedProductId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a product')),
-      );
+      _showSnack('Please choose a product.', AppColors.error);
       return;
     }
     if (_selectedVenueId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a venue')),
-      );
+      _showSnack('Please choose a venue.', AppColors.error);
       return;
     }
 
@@ -72,31 +75,29 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
         'venueId': _selectedVenueId,
         'rfidTag': _rfidCtrl.text.trim(),
       };
-      // Use the notifier so the optimistic update + offline queue are applied.
       await ref.read(bottlesListProvider.notifier).addBottle(payload);
       if (!mounted) return;
-      final pendingCount =
-          ref.read(queueStatusProvider).valueOrNull ?? 0;
+      final pendingCount = ref.read(queueStatusProvider).valueOrNull ?? 0;
       final isQueued = pendingCount > 0;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isQueued
-              ? 'Saved locally — will sync when online'
-              : 'Bottle registered successfully'),
-          backgroundColor:
-              isQueued ? AppColors.warning : AppColors.success,
-        ),
+      _showSnack(
+        isQueued
+            ? 'Saved locally and will sync when you are back online.'
+            : 'Bottle registered successfully.',
+        isQueued ? AppColors.warning : AppColors.success,
       );
       context.pop();
-    } on Exception catch (e) {
+    } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(e.toString()), backgroundColor: AppColors.error),
-      );
+      _showSnack(e.toString(), AppColors.error);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  void _showSnack(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
+    );
   }
 
   @override
@@ -114,23 +115,30 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── RFID tag ──────────────────────────────────────────────
-                const Text('RFID Tag', style: AppTextStyles.label),
-                const SizedBox(height: 6),
-                TextFormField(
-                  controller: _rfidCtrl,
-                  decoration: const InputDecoration(
-                    hintText: 'e.g. RF1042',
-                    prefixIcon: Icon(Icons.nfc),
-                  ),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Required' : null,
+                Text('Register a bottle', style: AppTextStyles.heading),
+                const SizedBox(height: 8),
+                const Text(
+                  'Confirm the product, tag, and location. When you launch this from a coaster or new product, most of the details are already filled in.',
+                  style: AppTextStyles.caption,
                 ),
                 const SizedBox(height: 20),
-
-                // ── Product selector ──────────────────────────────────────
-                const Text('Product', style: AppTextStyles.label),
-                const SizedBox(height: 6),
+                if (widget.prefillDeviceName != null)
+                  _ContextCard(
+                    icon: Icons.sensors,
+                    title: 'Working from coaster',
+                    subtitle: widget.prefillDeviceName!,
+                  ),
+                if (widget.prefillDeviceName != null)
+                  const SizedBox(height: 12),
+                if (_selectedVenueName != null)
+                  _ContextCard(
+                    icon: Icons.place_outlined,
+                    title: 'Suggested venue',
+                    subtitle: _selectedVenueName!,
+                  ),
+                if (_selectedVenueName != null) const SizedBox(height: 20),
+                const Text('Bottle', style: AppTextStyles.label),
+                const SizedBox(height: 8),
                 if (_selectedProductId != null)
                   _SelectedChip(
                     label: _selectedProductName ?? _selectedProductId!,
@@ -142,99 +150,193 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
                 else
                   productsAsync.when(
                     loading: () => const LinearProgressIndicator(),
-                    error: (_, __) =>
-                        const Text('Failed to load products',
-                            style: AppTextStyles.caption),
+                    error: (_, __) => const Text(
+                      'Failed to load products',
+                      style: AppTextStyles.caption,
+                    ),
                     data: (products) => DropdownButtonFormField<String>(
                       decoration: const InputDecoration(
-                          hintText: 'Select a product'),
+                        hintText: 'Select a product',
+                      ),
                       items: products
-                          .map((p) => DropdownMenuItem<String>(
-                                value: p['id'] as String,
-                                child: Text(p['name'] as String? ?? ''),
-                              ))
+                          .map(
+                            (product) => DropdownMenuItem<String>(
+                              value: product['id'] as String,
+                              child: Text(product['name'] as String? ?? ''),
+                            ),
+                          )
                           .toList(),
-                      onChanged: (v) {
-                        final p = products.firstWhere(
-                            (x) => x['id'] == v,
-                            orElse: () => {});
+                      onChanged: (value) {
+                        final product = products.firstWhere(
+                          (item) => item['id'] == value,
+                          orElse: () => {},
+                        );
                         setState(() {
-                          _selectedProductId = v;
-                          _selectedProductName = p['name'] as String?;
+                          _selectedProductId = value;
+                          _selectedProductName = product['name'] as String?;
                         });
                       },
-                      validator: (v) =>
-                          v == null ? 'Select a product' : null,
                     ),
                   ),
                 const SizedBox(height: 20),
-
-                // ── Venue selector ────────────────────────────────────────
-                const Text('Venue', style: AppTextStyles.label),
-                const SizedBox(height: 6),
+                const Text('Tag', style: AppTextStyles.label),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _rfidCtrl,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g. RF1042',
+                    prefixIcon: Icon(Icons.nfc),
+                  ),
+                  validator: (value) =>
+                      (value == null || value.isEmpty) ? 'Required' : null,
+                ),
+                const SizedBox(height: 20),
+                const Text('Location', style: AppTextStyles.label),
+                const SizedBox(height: 8),
                 venuesAsync.when(
                   loading: () => const LinearProgressIndicator(),
-                  error: (_, __) => const Text('Failed to load venues',
-                      style: AppTextStyles.caption),
+                  error: (_, __) => const Text(
+                    'Failed to load venues',
+                    style: AppTextStyles.caption,
+                  ),
                   data: (venues) => DropdownButtonFormField<String>(
-                    decoration:
-                        const InputDecoration(hintText: 'Select a venue'),
+                    initialValue: _selectedVenueId,
+                    decoration: const InputDecoration(
+                      hintText: 'Select a venue',
+                    ),
                     items: venues
-                        .map((v) => DropdownMenuItem<String>(
-                              value: v['id'] as String,
-                              child: Text(v['name'] as String? ?? ''),
-                            ))
+                        .map(
+                          (venue) => DropdownMenuItem<String>(
+                            value: venue['id'] as String,
+                            child: Text(venue['name'] as String? ?? ''),
+                          ),
+                        )
                         .toList(),
-                    onChanged: (v) =>
-                        setState(() => _selectedVenueId = v),
-                    validator: (v) =>
-                        v == null ? 'Select a venue' : null,
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // ── Info callout ──────────────────────────────────────────
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: AppColors.primary.withAlpha(80)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline,
-                          color: AppColors.primaryDark, size: 18),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'The RFID tag is read from the bottle cap. '
-                          'Place the bottle on a Smart Coaster to obtain the tag.',
-                          style: AppTextStyles.caption,
-                        ),
-                      ),
-                    ],
+                    onChanged: (value) {
+                      final venue = venues.firstWhere(
+                        (item) => item['id'] == value,
+                        orElse: () => {},
+                      );
+                      setState(() {
+                        _selectedVenueId = value;
+                        _selectedVenueName = venue['name'] as String?;
+                      });
+                    },
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                ElevatedButton(
-                  onPressed: _submitting ? null : _submit,
-                  child: _submitting
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2.5, color: Colors.white),
-                        )
-                      : const Text('Register Bottle'),
+                _ReviewCard(
+                  product: _selectedProductName,
+                  tag: _rfidCtrl.text.trim().isEmpty
+                      ? null
+                      : _rfidCtrl.text.trim(),
+                  venue: _selectedVenueName,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _submitting ? null : () => context.pop(),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _submitting ? null : _submit,
+                        child: _submitting
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Register bottle'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ContextCard extends StatelessWidget {
+  const _ContextCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withAlpha(60)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primaryDark),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: AppTextStyles.body
+                        .copyWith(fontWeight: FontWeight.w700)),
+                Text(subtitle, style: AppTextStyles.caption),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewCard extends StatelessWidget {
+  const _ReviewCard(
+      {required this.product, required this.tag, required this.venue});
+
+  final String? product;
+  final String? tag;
+  final String? venue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Ready to register', style: AppTextStyles.title),
+          const SizedBox(height: 10),
+          Text('Product: ${product ?? 'Choose a product'}',
+              style: AppTextStyles.caption),
+          Text('Tag: ${tag ?? 'Add the RFID tag'}',
+              style: AppTextStyles.caption),
+          Text('Venue: ${venue ?? 'Choose a venue'}',
+              style: AppTextStyles.caption),
+        ],
       ),
     );
   }
@@ -257,19 +359,21 @@ class _SelectedChip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.inventory_2,
-              color: AppColors.primaryDark, size: 18),
+          const Icon(Icons.inventory_2, color: AppColors.primaryDark, size: 18),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(label,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryDark)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryDark,
+              ),
+            ),
           ),
           GestureDetector(
             onTap: onClear,
-            child: const Icon(Icons.close,
-                color: AppColors.primaryDark, size: 18),
+            child:
+                const Icon(Icons.close, color: AppColors.primaryDark, size: 18),
           ),
         ],
       ),

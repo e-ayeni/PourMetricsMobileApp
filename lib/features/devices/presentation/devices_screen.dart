@@ -18,7 +18,7 @@ class DevicesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Smart Coasters'),
+        title: const Text('Devices'),
         actions: [
           if (isAdmin)
             IconButton(
@@ -39,79 +39,87 @@ class DevicesScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(devicesListProvider),
         ),
         data: (devices) {
-          final online =
-              devices.where((d) => _isOnline(d)).length;
-          return Column(
-            children: [
-              _SummaryBar(total: devices.length, online: online),
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(devicesListProvider),
-                  child: devices.isEmpty
-                      ? const Center(
-                          child: Text('No coasters registered',
-                              style: AppTextStyles.caption))
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(12),
-                          itemCount: devices.length,
-                          itemBuilder: (_, i) => _DeviceTile(
-                              data: devices[i] as Map<String, dynamic>),
-                        ),
-                ),
-              ),
-            ],
+          final list = devices.cast<Map<String, dynamic>>();
+          final online = list.where(_isOnline).length;
+          final offline = list.length - online;
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(devicesListProvider),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              children: [
+                _DeviceOverview(
+                    total: list.length, online: online, offline: offline),
+                const SizedBox(height: 20),
+                const Text('Your coasters', style: AppTextStyles.title),
+                const SizedBox(height: 12),
+                if (list.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 80),
+                    child: Center(
+                      child: Text('No coasters registered',
+                          style: AppTextStyles.caption),
+                    ),
+                  )
+                else
+                  ...list.map((device) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _DeviceCard(data: device),
+                      )),
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  static bool _isOnline(dynamic d) {
-    final lastSeen = d['lastSeenAt'] as String?;
+  static bool _isOnline(Map<String, dynamic> device) {
+    final lastSeen = device['lastSeenAt'] as String?;
     if (lastSeen == null) return false;
-    final diff =
-        DateTime.now().difference(DateTime.parse(lastSeen));
+    final diff = DateTime.now().difference(DateTime.parse(lastSeen));
     return diff.inMinutes < 10;
   }
 }
 
-// ── Summary bar ───────────────────────────────────────────────────────────────
-
-class _SummaryBar extends StatelessWidget {
-  const _SummaryBar({required this.total, required this.online});
+class _DeviceOverview extends StatelessWidget {
+  const _DeviceOverview({
+    required this.total,
+    required this.online,
+    required this.offline,
+  });
 
   final int total;
   final int online;
+  final int offline;
 
   @override
   Widget build(BuildContext context) {
-    final offline = total - online;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
-      ),
-      child: Row(
-        children: [
-          _SummaryTile(
+    return Row(
+      children: [
+        Expanded(
+          child: _MetricTile(
               label: 'Total', value: '$total', color: AppColors.info),
-          const SizedBox(width: 24),
-          _SummaryTile(
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _MetricTile(
               label: 'Online', value: '$online', color: AppColors.success),
-          const SizedBox(width: 24),
-          _SummaryTile(
-              label: 'Offline',
-              value: '$offline',
-              color: offline > 0 ? AppColors.error : AppColors.textMuted),
-        ],
-      ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _MetricTile(
+            label: 'Offline',
+            value: '$offline',
+            color: offline > 0 ? AppColors.error : AppColors.textMuted,
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _SummaryTile extends StatelessWidget {
-  const _SummaryTile(
+class _MetricTile extends StatelessWidget {
+  const _MetricTile(
       {required this.label, required this.value, required this.color});
 
   final String label;
@@ -119,183 +127,193 @@ class _SummaryTile extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(value,
               style: TextStyle(
-                  fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+                  fontSize: 22, fontWeight: FontWeight.w700, color: color)),
+          const SizedBox(height: 4),
           Text(label, style: AppTextStyles.caption),
         ],
-      );
+      ),
+    );
+  }
 }
 
-// ── Device tile ───────────────────────────────────────────────────────────────
-
-class _DeviceTile extends StatefulWidget {
-  const _DeviceTile({required this.data});
+class _DeviceCard extends StatelessWidget {
+  const _DeviceCard({required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  State<_DeviceTile> createState() => _DeviceTileState();
-}
-
-class _DeviceTileState extends State<_DeviceTile> {
-  bool _expanded = false;
-
-  @override
   Widget build(BuildContext context) {
-    final d = widget.data;
-    final name = d['coasterName'] as String? ?? 'Unknown Coaster';
-    final location = d['barLocation'] as String? ?? '';
-    final venue = d['venueName'] as String? ?? '';
-    final firmware = d['firmwareVersion'] as String? ?? '—';
-    final mac = d['macAddress'] as String? ?? '—';
-    final batteryV = (d['batteryVoltage'] as num?)?.toDouble() ?? 0.0;
-    final lastSeen = d['lastSeenAt'] as String?;
-
-    final isOnline = lastSeen != null &&
-        DateTime.now()
-                .difference(DateTime.parse(lastSeen))
-                .inMinutes <
-            10;
-
-    final batteryPct = _batteryPercent(batteryV);
+    final id = data['id']?.toString() ?? '';
+    final name = data['coasterName'] as String? ??
+        data['barLocation'] as String? ??
+        'Smart Coaster';
+    final venueName = data['venueName'] as String?;
+    final venueId = data['venueId']?.toString();
+    final location = data['barLocation'] as String?;
+    final currentBottle = data['currentBottle'] as Map<String, dynamic>?;
+    final currentBottleName = currentBottle?['productName'] as String?;
+    final firmware = data['firmwareVersion'] as String? ?? '—';
+    final mac = data['macAddress'] as String? ?? '—';
+    final batteryV = (data['batteryVoltage'] as num?)?.toDouble() ?? 0;
+    final online = DevicesScreen._isOnline(data);
+    final batteryPct = ((batteryV - 3.0) / 0.7).clamp(0.0, 1.0);
     final batteryColor = batteryPct > 0.4
         ? AppColors.success
         : batteryPct > 0.15
             ? AppColors.warning
             : AppColors.error;
+    final lastSeenLabel = _relativeTime(data['lastSeenAt'] as String?);
 
-    final lastSeenLabel = lastSeen != null
-        ? _relativeTime(DateTime.parse(lastSeen))
-        : 'Never';
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => setState(() => _expanded = !_expanded),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  // Status dot
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isOnline ? AppColors.success : AppColors.error,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(name, style: AppTextStyles.title),
-                        Text(
-                          [if (location.isNotEmpty) location, if (venue.isNotEmpty) venue]
-                              .join(' · '),
-                          style: AppTextStyles.caption,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Battery
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(_batteryIcon(batteryPct),
-                              color: batteryColor, size: 18),
-                          const SizedBox(width: 4),
-                          Text('${(batteryPct * 100).toStringAsFixed(0)}%',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: batteryColor)),
-                        ],
-                      ),
-                      Text(isOnline ? 'Online' : 'Offline',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: isOnline
-                                  ? AppColors.success
-                                  : AppColors.error)),
-                    ],
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    _expanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textMuted,
-                  ),
-                ],
-              ),
-              // Battery bar
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(2),
-                child: LinearProgressIndicator(
-                  value: batteryPct,
-                  minHeight: 4,
-                  backgroundColor: AppColors.border,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(batteryColor),
+              CircleAvatar(
+                radius: 20,
+                backgroundColor:
+                    online ? AppColors.primaryLight : AppColors.surfaceMuted,
+                child: Icon(
+                  online ? Icons.sensors : Icons.sensors_off,
+                  color: online ? AppColors.primaryDark : AppColors.textMuted,
                 ),
               ),
-              // Expanded details
-              if (_expanded) ...[
-                const SizedBox(height: 14),
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-                _DetailRow(
-                    icon: Icons.access_time_outlined,
-                    label: 'Last seen',
-                    value: lastSeenLabel),
-                const SizedBox(height: 8),
-                _DetailRow(
-                    icon: Icons.memory_outlined,
-                    label: 'Firmware',
-                    value: firmware),
-                const SizedBox(height: 8),
-                _DetailRow(
-                    icon: Icons.wifi_outlined,
-                    label: 'MAC address',
-                    value: mac,
-                    mono: true),
-                const SizedBox(height: 8),
-                _DetailRow(
-                    icon: Icons.battery_charging_full_outlined,
-                    label: 'Voltage',
-                    value: '${batteryV.toStringAsFixed(2)} V'),
-              ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: AppTextStyles.title),
+                    Text(
+                      [
+                        if (location != null && location.isNotEmpty) location,
+                        if (venueName != null && venueName.isNotEmpty) venueName
+                      ].join(' · '),
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
+              ),
+              _StatusPill(
+                label: online ? 'Online' : 'Offline',
+                color: online ? AppColors.success : AppColors.error,
+              ),
             ],
           ),
-        ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _InfoTile(
+                  label: 'Battery',
+                  value: '${(batteryPct * 100).toStringAsFixed(0)}%',
+                  color: batteryColor,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _InfoTile(
+                  label: 'Last seen',
+                  value: lastSeenLabel,
+                  color: online ? AppColors.success : AppColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+          if (currentBottleName != null) ...[
+            const SizedBox(height: 12),
+            _ContextCard(
+              icon: Icons.local_drink_outlined,
+              title: 'Current bottle',
+              subtitle: currentBottleName,
+            ),
+          ],
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () => context.push(
+                  Uri(
+                    path: '/inventory/add-product',
+                    queryParameters: {
+                      'mode': 'guided',
+                      'deviceId': id,
+                      'deviceName': name,
+                      if (venueId != null) 'venueId': venueId,
+                      if (venueName != null) 'venueName': venueName,
+                    },
+                  ).toString(),
+                ),
+                icon: const Icon(Icons.scale_outlined),
+                label: const Text('Measure product'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.push(
+                  Uri(
+                    path: '/inventory/register-bottle',
+                    queryParameters: {
+                      'deviceId': id,
+                      'deviceName': name,
+                      if (venueId != null) 'venueId': venueId,
+                      if (venueName != null) 'venueName': venueName,
+                    },
+                  ).toString(),
+                ),
+                icon: const Icon(Icons.nfc_rounded),
+                label: const Text('Register bottle'),
+              ),
+              if (currentBottle?['id'] != null)
+                TextButton.icon(
+                  onPressed: () =>
+                      context.push('/inventory/bottle/${currentBottle!['id']}'),
+                  icon: const Icon(Icons.visibility_outlined),
+                  label: const Text('View bottle'),
+                ),
+              if (!online)
+                TextButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Check power, Wi-Fi, and device placement for this coaster.'),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.build_circle_outlined),
+                  label: const Text('Troubleshoot'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('Firmware $firmware · $mac', style: AppTextStyles.caption),
+        ],
       ),
     );
   }
 
-  double _batteryPercent(double voltage) {
-    // Approximate: 3.7V = full, 3.0V = empty
-    return ((voltage - 3.0) / 0.7).clamp(0.0, 1.0);
-  }
-
-  IconData _batteryIcon(double pct) {
-    if (pct > 0.75) return Icons.battery_full;
-    if (pct > 0.5) return Icons.battery_5_bar;
-    if (pct > 0.25) return Icons.battery_3_bar;
-    if (pct > 0.1) return Icons.battery_1_bar;
-    return Icons.battery_alert;
-  }
-
-  String _relativeTime(DateTime dt) {
+  String _relativeTime(String? value) {
+    if (value == null) return 'Never';
+    final dt = DateTime.parse(value);
     final diff = DateTime.now().difference(dt);
     if (diff.inSeconds < 60) return 'Just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
@@ -304,33 +322,88 @@ class _DeviceTileState extends State<_DeviceTile> {
   }
 }
 
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.mono = false,
-  });
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.label, required this.color});
 
-  final IconData icon;
   final String label;
-  final String value;
-  final bool mono;
+  final Color color;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withAlpha(22),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(label, style: AppTextStyles.tag.copyWith(color: color)),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  const _InfoTile(
+      {required this.label, required this.value, required this.color});
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: AppColors.textMuted),
-          const SizedBox(width: 8),
-          Text('$label  ', style: AppTextStyles.caption),
+          Text(label, style: AppTextStyles.caption),
+          const SizedBox(height: 4),
+          Text(value,
+              style: AppTextStyles.body
+                  .copyWith(fontWeight: FontWeight.w700, color: color)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContextCard extends StatelessWidget {
+  const _ContextCard(
+      {required this.icon, required this.title, required this.subtitle});
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primaryDark),
+          const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              value,
-              style: mono ? AppTextStyles.mono : AppTextStyles.body,
-              textAlign: TextAlign.end,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: AppTextStyles.body
+                        .copyWith(fontWeight: FontWeight.w700)),
+                Text(subtitle, style: AppTextStyles.caption),
+              ],
             ),
           ),
         ],
-      );
+      ),
+    );
+  }
 }

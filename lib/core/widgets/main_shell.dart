@@ -7,10 +7,10 @@ class MainShell extends StatelessWidget {
   final Widget child;
 
   static const _tabs = [
-    (path: '/dashboard', label: 'Dashboard', icon: Icons.bar_chart),
-    (path: '/pours', label: 'Pours', icon: Icons.local_drink),
-    (path: '/inventory', label: 'Inventory', icon: Icons.inventory_2),
-    (path: '/profile', label: 'Profile', icon: Icons.person),
+    (path: '/dashboard', label: 'Home', icon: Icons.home_rounded),
+    (path: '/inventory', label: 'Inventory', icon: Icons.inventory_2_rounded),
+    (path: '/devices', label: 'Devices', icon: Icons.sensors_rounded),
+    (path: '/profile', label: 'Profile', icon: Icons.person_rounded),
   ];
 
   int _tabIndex(BuildContext context) {

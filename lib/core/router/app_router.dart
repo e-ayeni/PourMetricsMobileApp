@@ -47,12 +47,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const DashboardScreen(),
           ),
           GoRoute(
-            path: '/pours',
-            builder: (context, state) => const PoursScreen(),
-          ),
-          GoRoute(
             path: '/inventory',
             builder: (context, state) => const InventoryScreen(),
+          ),
+          GoRoute(
+            path: '/devices',
+            builder: (context, state) => const DevicesScreen(),
           ),
           GoRoute(
             path: '/profile',
@@ -60,7 +60,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // Full-screen routes outside the shell (no bottom nav)
+      GoRoute(
+        path: '/pours',
+        builder: (context, state) => const PoursScreen(),
+      ),
       GoRoute(
         path: '/alerts',
         builder: (context, state) => const AlertsScreen(),
@@ -68,10 +71,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/alerts/config',
         builder: (context, state) => const AlertConfigScreen(),
-      ),
-      GoRoute(
-        path: '/devices',
-        builder: (context, state) => const DevicesScreen(),
       ),
       GoRoute(
         path: '/devices/setup',
@@ -84,8 +83,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/inventory/add-product',
         builder: (context, state) {
-          final barcode = state.uri.queryParameters['barcode'];
-          return AddProductScreen(prefillBarcode: barcode);
+          final query = state.uri.queryParameters;
+          return AddProductScreen(
+            prefillBarcode: query['barcode'],
+            initialMode: query['mode'],
+            preselectedDeviceId: query['deviceId'],
+            preselectedDeviceName: query['deviceName'],
+            preselectedVenueId: query['venueId'],
+            preselectedVenueName: query['venueName'],
+          );
         },
       ),
       GoRoute(
@@ -101,13 +107,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/inventory/register-bottle',
         builder: (context, state) {
-          final productId = state.uri.queryParameters['productId'];
-          final productName = state.uri.queryParameters['productName'];
-          final rfidTag = state.uri.queryParameters['rfidTag'];
+          final query = state.uri.queryParameters;
           return RegisterBottleScreen(
-            prefillProductId: productId,
-            prefillProductName: productName,
-            prefillRfidTag: rfidTag,
+            prefillProductId: query['productId'],
+            prefillProductName: query['productName'],
+            prefillRfidTag: query['rfidTag'],
+            prefillVenueId: query['venueId'],
+            prefillVenueName: query['venueName'],
+            prefillDeviceId: query['deviceId'],
+            prefillDeviceName: query['deviceName'],
           );
         },
       ),
