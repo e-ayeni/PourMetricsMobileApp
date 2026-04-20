@@ -295,6 +295,7 @@ class _QuickAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 158,
+      height: 84,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -304,11 +305,13 @@ class _QuickAction extends StatelessWidget {
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: AppColors.primaryDark),
-              const SizedBox(width: 10),
-              Expanded(child: Text(label, style: AppTextStyles.body)),
+              const SizedBox(height: 10),
+              Text(label, style: AppTextStyles.body, maxLines: 2),
             ],
           ),
         ),
@@ -336,11 +339,13 @@ class _MetricTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w700, color: color)),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w700, color: color),
+          ),
           const SizedBox(height: 4),
           Text(label, style: AppTextStyles.caption),
         ],
@@ -412,6 +417,8 @@ class _TopProductTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final revenue = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -433,10 +440,7 @@ class _TopProductTile extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            '4${product.revenue.toStringAsFixed(2)}',
-            style: AppTextStyles.amount,
-          ),
+          Text(revenue.format(product.revenue), style: AppTextStyles.amount),
         ],
       ),
     );

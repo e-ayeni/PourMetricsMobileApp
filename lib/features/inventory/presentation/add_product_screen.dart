@@ -44,6 +44,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   late final TextEditingController _name;
   late final TextEditingController _category;
   late final TextEditingController _barcode;
+  late final TextEditingController _imageUrl;
   late final TextEditingController _emptyWeight;
   late final TextEditingController _fullWeight;
   late final TextEditingController _bottleVolume;
@@ -77,6 +78,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     _name = TextEditingController();
     _category = TextEditingController();
     _barcode = TextEditingController(text: widget.prefillBarcode ?? '');
+    _imageUrl = TextEditingController();
     _emptyWeight = TextEditingController();
     _fullWeight = TextEditingController();
     _bottleVolume = TextEditingController(text: '700');
@@ -98,6 +100,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       _name,
       _category,
       _barcode,
+      _imageUrl,
       _emptyWeight,
       _fullWeight,
       _bottleVolume,
@@ -168,6 +171,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   void _populateFromProduct(Map<String, dynamic> existing) {
     _name.text = existing['name'] as String? ?? '';
     _category.text = existing['category'] as String? ?? '';
+    _imageUrl.text = existing['imageUrl'] as String? ?? '';
     _bottleVolume.text =
         (existing['bottleVolumeMl'] as num?)?.toString() ?? _bottleVolume.text;
     _liquidDensity.text =
@@ -248,6 +252,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       'name': _name.text.trim(),
       'category': _category.text.trim(),
       'barcode': _barcode.text.trim().isEmpty ? null : _barcode.text.trim(),
+      'imageUrl': _imageUrl.text.trim().isEmpty ? null : _imageUrl.text.trim(),
       'bottleVolumeMl': double.parse(_bottleVolume.text),
       'liquidDensityGPerMl': double.parse(_liquidDensity.text),
       'referenceTemperatureC': _referenceTemperature.text.trim().isEmpty
@@ -537,6 +542,17 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
           controller: _bottleVolume,
           hint: '700',
           numeric: true,
+        ),
+        TextFormField(
+          controller: _imageUrl,
+          decoration: const InputDecoration(
+            labelText: 'Product image URL (optional)',
+            hintText: 'https://.../bottle.jpg',
+            prefixIcon: Icon(Icons.image_outlined),
+            helperText:
+                'The API currently stores a hosted image URL for the product.',
+          ),
+          keyboardType: TextInputType.url,
         ),
       ],
     );
@@ -828,14 +844,14 @@ class _StepHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const labels = [
-      'Setup method',
-      'Product details',
-      'Shot and price',
-      'Bottle setup',
+      "Setup method",
+      "Product details",
+      "Shot and price",
+      "Bottle setup",
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border)),
@@ -843,33 +859,22 @@ class _StepHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Step ${step + 1} of ${labels.length}',
-              style: AppTextStyles.caption),
-          const SizedBox(height: 8),
-          Row(
-            children: List.generate(labels.length, (index) {
-              final active = index <= step;
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                      right: index == labels.length - 1 ? 0 : 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: active ? AppColors.primary : AppColors.border,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(labels[index], style: AppTextStyles.caption),
-                    ],
-                  ),
-                ),
-              );
-            }),
+          Text(
+            "Step ${step + 1} of ${labels.length}",
+            style: AppTextStyles.caption,
+          ),
+          const SizedBox(height: 4),
+          Text(labels[step], style: AppTextStyles.title),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: (step + 1) / labels.length,
+              minHeight: 8,
+              backgroundColor: AppColors.border,
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
           ),
         ],
       ),
