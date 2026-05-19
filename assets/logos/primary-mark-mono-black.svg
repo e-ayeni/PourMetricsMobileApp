@@ -1,18 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="512" height="512">
 
-<defs>
-  <clipPath id="dropClip">
-    <path d="M60 18 C60 18, 30 52, 30 78 A30 30 0 0 0 90 78 C90 52, 60 18, 60 18 Z"></path>
-  </clipPath>
-</defs>
-<path d="M60 18 C60 18, 30 52, 30 78 A30 30 0 0 0 90 78 C90 52, 60 18, 60 18 Z" fill="none" stroke="#1A1208" stroke-width="3" stroke-linejoin="round"></path>
+<defs><clipPath id="dropClip"><path d="M60 14 C60 28 28 50 28 78 A32 32 0 0 0 92 78 C92 50 60 28 60 14 Z"></path></clipPath></defs>
+<path d="M60 14 C60 28 28 50 28 78 A32 32 0 0 0 92 78 C92 50 60 28 60 14 Z" fill="none" stroke="#1A1208" stroke-width="3" stroke-linejoin="round"></path>
 <g clip-path="url(#dropClip)">
   <rect x="0" y="68" width="120" height="50" fill="#1A1208"></rect>
   <path d="M0 68 Q30 62 60 68 T120 68 L120 75 L0 75 Z" fill="#1A1208" fill-opacity="0.5"></path>
 </g>
 <g stroke="#1A1208" stroke-width="2" stroke-linecap="round">
-  <line x1="30" y1="64" x2="36" y2="64"></line>
-  <line x1="30" y1="74" x2="34" y2="74"></line>
-  <line x1="30" y1="84" x2="36" y2="84"></line>
+  <line x1="32" y1="62" x2="38" y2="62"></line>
+  <line x1="32" y1="74" x2="36" y2="74"></line>
+  <line x1="32" y1="86" x2="38" y2="86"></line>
 </g>
 </svg>

@@ -115,29 +115,43 @@ class DashboardScreen extends ConsumerWidget {
                 SizedBox(height: 24),
                 Text('Quick actions', style: AppTextStyles.title),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
+                Row(
                   children: [
-                    _QuickAction(
-                      label: 'Add product',
-                      icon: Icons.inventory_2_outlined,
-                      onTap: () => context.push('/inventory/add-product'),
+                    Expanded(
+                      child: _QuickAction(
+                        label: 'Add product',
+                        icon: Icons.inventory_2_outlined,
+                        onTap: () => context.push('/inventory/add-product'),
+                      ),
                     ),
-                    _QuickAction(
-                      label: 'Register bottle',
-                      icon: Icons.nfc_rounded,
-                      onTap: () => context.push('/inventory/register-bottle'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _QuickAction(
+                        label: 'Register bottle',
+                        icon: Icons.nfc_rounded,
+                        onTap: () =>
+                            context.push('/inventory/register-bottle'),
+                      ),
                     ),
-                    _QuickAction(
-                      label: 'Set up coaster',
-                      icon: Icons.add_circle_outline,
-                      onTap: () => context.push('/devices/setup'),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _QuickAction(
+                        label: 'Set up coaster',
+                        icon: Icons.add_circle_outline,
+                        onTap: () => context.push('/devices/setup'),
+                      ),
                     ),
-                    _QuickAction(
-                      label: 'View alerts',
-                      icon: Icons.notifications_none_outlined,
-                      onTap: () => context.push('/alerts'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _QuickAction(
+                        label: 'View alerts',
+                        icon: Icons.notifications_none_outlined,
+                        onTap: () => context.push('/alerts'),
+                      ),
                     ),
                   ],
                 ),
@@ -295,7 +309,6 @@ class _QuickAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 158,
       height: 84,
       child: InkWell(
         onTap: onTap,

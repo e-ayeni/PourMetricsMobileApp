@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -45,7 +46,7 @@ class NotificationService {
     _initialised = true;
 
     // ── Local notifications setup ─────────────────────────────────────────
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('@drawable/ic_notification');
     const iOS = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -120,7 +121,8 @@ class NotificationService {
           channelDescription: _alertChannel.description,
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: '@drawable/ic_notification',
+          color: const Color(0xFFC17D2B),
         ),
         iOS: const DarwinNotificationDetails(
           presentAlert: true,
