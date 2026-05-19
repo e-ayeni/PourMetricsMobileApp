@@ -157,8 +157,8 @@ class _BottlePainter extends CustomPainter {
   }
 
   Color _fillColor(double pct) {
-    if (pct > 0.5) return const Color(0xFFD97706).withAlpha(200); // amber
-    if (pct > 0.25) return const Color(0xFFF59E0B).withAlpha(180); // lighter
+    if (pct > 0.5) return const Color(0xFF7A4A0F).withAlpha(200);
+    if (pct > 0.25) return const Color(0xFFC17D2B).withAlpha(180);
     return const Color(0xFFEF4444).withAlpha(180); // red when low
   }
 

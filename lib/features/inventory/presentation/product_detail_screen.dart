@@ -8,6 +8,7 @@ import '../../../core/providers/dio_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/inventory_provider.dart';
 import 'detail_widgets.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({super.key, required this.productId});
@@ -170,7 +171,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+              body: Center(child: PourLoadingIndicator()));
         }
         if (snap.hasError || snap.data == null) {
           return Scaffold(

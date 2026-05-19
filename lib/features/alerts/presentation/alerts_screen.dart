@@ -7,6 +7,7 @@ import '../../../core/widgets/error_view.dart';
 import '../../../core/providers/dio_provider.dart';
 import '../../../core/constants/api_constants.dart';
 import '../providers/alerts_provider.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 class AlertsScreen extends ConsumerWidget {
   const AlertsScreen({super.key});
@@ -26,13 +27,13 @@ class AlertsScreen extends ConsumerWidget {
         ],
       ),
       body: alertsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: PourLoadingIndicator()),
         error: (e, _) => ErrorView(
           message: 'Failed to load alerts',
           onRetry: () => ref.invalidate(alertsListProvider),
         ),
         data: (alerts) => alerts.isEmpty
-            ? const Center(
+            ? Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

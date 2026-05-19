@@ -7,6 +7,7 @@ import '../../../core/widgets/bottle_fill_widget.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/services/queue_status_notifier.dart';
 import '../providers/inventory_provider.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 enum _BottleFilter { all, low, unassigned, recent }
 
@@ -99,7 +100,7 @@ class _BottlesTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(bottlesListProvider);
     return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Center(child: PourLoadingIndicator()),
       error: (e, _) => ErrorView(
         message: 'Failed to load bottles',
         onRetry: () => ref.read(bottlesListProvider.notifier).refresh(),
@@ -123,7 +124,7 @@ class _BottlesTab extends ConsumerWidget {
                 onRefresh: () =>
                     ref.read(bottlesListProvider.notifier).refresh(),
                 child: filtered.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text('No bottles match this view',
                             style: AppTextStyles.caption),
                       )
@@ -200,7 +201,7 @@ class _BottleTile extends StatelessWidget {
                 fillPercent: fillPct,
                 isRetired: isRetired,
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,7 +222,7 @@ class _BottleTile extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text('RFID: $rfid', style: AppTextStyles.caption),
                     Text(venue, style: AppTextStyles.caption),
                     const SizedBox(height: 6),
@@ -234,7 +235,7 @@ class _BottleTile extends StatelessWidget {
                               ? AppColors.success
                               : AppColors.textMuted,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             coaster != null
@@ -272,7 +273,7 @@ class _ProductsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(productsListProvider);
     return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => Center(child: PourLoadingIndicator()),
       error: (e, _) => ErrorView(
         message: 'Failed to load products',
         onRetry: () => ref.read(productsListProvider.notifier).refresh(),
@@ -299,7 +300,7 @@ class _ProductsTab extends ConsumerWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
+                            Text(
                               'No products in this view',
                               style: AppTextStyles.caption,
                             ),
@@ -413,7 +414,7 @@ class _ProductTile extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,7 +428,7 @@ class _ProductTile extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       '$category · ${bottleVolume.toStringAsFixed(0)} ml bottle',
                       style: AppTextStyles.caption,
@@ -446,7 +447,7 @@ class _ProductTile extends StatelessWidget {
                 children: [
                   Text('\$${price.toStringAsFixed(2)}',
                       style: AppTextStyles.amount),
-                  const Text('/ shot', style: AppTextStyles.caption),
+                  Text('/ shot', style: AppTextStyles.caption),
                 ],
               ),
               const SizedBox(width: 4),

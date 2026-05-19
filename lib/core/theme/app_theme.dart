@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 
@@ -12,13 +13,15 @@ class AppTheme {
           seedColor: AppColors.primary,
           brightness: Brightness.light,
         ),
+        textTheme: GoogleFonts.dmSansTextTheme(),
         scaffoldBackgroundColor: AppColors.scaffold,
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           backgroundColor: AppColors.surface,
           foregroundColor: AppColors.textPrimary,
           elevation: 0,
           scrolledUnderElevation: 1,
           centerTitle: false,
+          titleTextStyle: AppTextStyles.title,
         ),
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: AppColors.navBackground,

@@ -10,6 +10,7 @@ import '../../../core/widgets/bottle_fill_widget.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/inventory_provider.dart';
 import 'detail_widgets.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 class BottleDetailScreen extends ConsumerStatefulWidget {
   const BottleDetailScreen({super.key, required this.bottleId});
@@ -120,7 +121,7 @@ class _BottleDetailScreenState extends ConsumerState<BottleDetailScreen> {
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+              body: Center(child: PourLoadingIndicator()));
         }
         if (snap.hasError || snap.data == null) {
           return Scaffold(
@@ -303,7 +304,7 @@ class _VenueDropdown extends ConsumerWidget {
     return async.when(
       loading: () => const LinearProgressIndicator(),
       error: (_, __) =>
-          const Text('Failed to load venues', style: AppTextStyles.caption),
+          Text('Failed to load venues', style: AppTextStyles.caption),
       data: (venues) => DropdownButtonFormField<String>(
         initialValue: currentId,
         decoration: const InputDecoration(),

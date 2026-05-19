@@ -8,6 +8,7 @@ import '../../../core/widgets/error_view.dart';
 import '../../devices/providers/devices_provider.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import '../providers/dashboard_provider.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -34,7 +35,7 @@ class DashboardScreen extends ConsumerWidget {
         ],
       ),
       body: summaryAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: PourLoadingIndicator()),
         error: (e, _) => ErrorView(
           message: 'Failed to load home screen',
           onRetry: () => ref.invalidate(dashboardProvider),
@@ -62,8 +63,8 @@ class DashboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [
                 Text('What needs attention?', style: AppTextStyles.heading),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8),
+                Text(
                   'Start with the tasks that need action now, then review today\'s numbers below.',
                   style: AppTextStyles.caption,
                 ),
@@ -111,8 +112,8 @@ class DashboardScreen extends ConsumerWidget {
                       : AppColors.error,
                   onTap: () => context.push('/alerts'),
                 ),
-                const SizedBox(height: 24),
-                const Text('Quick actions', style: AppTextStyles.title),
+                SizedBox(height: 24),
+                Text('Quick actions', style: AppTextStyles.title),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
@@ -140,8 +141,8 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                const Text('Today\'s performance', style: AppTextStyles.title),
+                SizedBox(height: 24),
+                Text('Today\'s performance', style: AppTextStyles.title),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -171,20 +172,20 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Recent activity', style: AppTextStyles.title),
+                    Text('Recent activity', style: AppTextStyles.title),
                     TextButton(
                       onPressed: () => context.push('/pours'),
                       child: const Text('See all'),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 if (summary.recentPours.isEmpty)
-                  const Center(
+                  Center(
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Text('No pours yet today',
@@ -196,8 +197,8 @@ class DashboardScreen extends ConsumerWidget {
                         (pour) => _ActivityTile(data: pour),
                       ),
                 if (summary.topProducts.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  const Text('Top products today', style: AppTextStyles.title),
+                  SizedBox(height: 24),
+                  Text('Top products today', style: AppTextStyles.title),
                   const SizedBox(height: 12),
                   ...summary.topProducts.take(4).map(
                         (product) => _TopProductTile(product: product),
@@ -259,7 +260,7 @@ class _AttentionCard extends StatelessWidget {
               backgroundColor: color.withAlpha(20),
               child: Icon(icon, color: color),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,7 +268,7 @@ class _AttentionCard extends StatelessWidget {
                   Text(title,
                       style: AppTextStyles.body
                           .copyWith(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(subtitle, style: AppTextStyles.caption),
                 ],
               ),
@@ -310,7 +311,7 @@ class _QuickAction extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: AppColors.primaryDark),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(label, style: AppTextStyles.body, maxLines: 2),
             ],
           ),
@@ -346,7 +347,7 @@ class _MetricTile extends StatelessWidget {
             style: TextStyle(
                 fontSize: 16, fontWeight: FontWeight.w700, color: color),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(label, style: AppTextStyles.caption),
         ],
       ),
@@ -380,7 +381,7 @@ class _ActivityTile extends StatelessWidget {
             child:
                 Icon(Icons.local_drink_outlined, color: AppColors.primaryDark),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

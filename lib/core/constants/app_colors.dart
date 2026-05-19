@@ -4,21 +4,25 @@ class AppColors {
   AppColors._();
 
   // Brand
-  static const Color primary = Color(0xFFF59E0B);
-  static const Color primaryDark = Color(0xFFD97706);
-  static const Color primaryLight = Color(0xFFFFF8E1);
+  static const Color primary = Color(0xFFC17D2B);
+  static const Color primaryDark = Color(0xFF7A4A0F);
+  static const Color primaryLight = Color(0xFFFDF3E3);
+  static const Color gold = Color(0xFFD9A547);
 
   // Backgrounds
-  static const Color scaffold = Color(0xFFF8F8F8);
+  static const Color scaffold = Color(0xFFFAF6F0);
   static const Color surface = Colors.white;
-  static const Color surfaceMuted = Color(0xFFF5F5F5);
+  static const Color surfaceMuted = Color(0xFFFDF3E3);
+
+  // Dark mode
+  static const Color midnight = Color(0xFF0F0A05);
 
   // Borders
   static const Color border = Color(0xFFEEEEEE);
   static const Color borderInput = Color(0xFFE0E0E0);
 
   // Text
-  static const Color textPrimary = Color(0xFF1A1A1A);
+  static const Color textPrimary = Color(0xFF1A1208);
   static const Color textMuted = Colors.grey;
   static const Color textLabel = Color(0xFF757575);
 

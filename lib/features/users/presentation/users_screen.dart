@@ -6,6 +6,7 @@ import '../../../core/providers/dio_provider.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/widgets/error_view.dart';
 import '../providers/users_provider.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 const _roles = ['Admin', 'Manager', 'Bartender', 'Viewer'];
 
@@ -32,7 +33,7 @@ class UsersScreen extends ConsumerWidget {
         ],
       ),
       body: usersAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: PourLoadingIndicator()),
         error: (e, _) => ErrorView(
           message: 'Failed to load team',
           onRetry: () => ref.invalidate(usersListProvider),
@@ -40,7 +41,7 @@ class UsersScreen extends ConsumerWidget {
         data: (users) => RefreshIndicator(
           onRefresh: () async => ref.invalidate(usersListProvider),
           child: users.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text('No users found', style: AppTextStyles.caption))
               : ListView.builder(
                   padding: const EdgeInsets.all(12),
@@ -99,7 +100,7 @@ class _UserTile extends ConsumerWidget {
                     fontWeight: FontWeight.w700),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,8 +373,8 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
               prefixIcon: Icon(Icons.email_outlined),
             ),
           ),
-          const SizedBox(height: 16),
-          const Text('Role', style: AppTextStyles.label),
+          SizedBox(height: 16),
+          Text('Role', style: AppTextStyles.label),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             initialValue: _selectedRole,

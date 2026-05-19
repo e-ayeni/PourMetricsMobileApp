@@ -457,7 +457,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       children: [
         Text('How do you want to set this up?', style: AppTextStyles.heading),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Choose the setup path first. You can either measure the bottle on a smart coaster or enter the bottle weights yourself.',
           style: AppTextStyles.caption,
         ),
@@ -488,7 +488,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       children: [
         Text('Product details', style: AppTextStyles.heading),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Start with the bottle basics. Barcode scanning is optional.',
           style: AppTextStyles.caption,
         ),
@@ -564,7 +564,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       children: [
         Text('Shot and price', style: AppTextStyles.heading),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Set the standard shot, the allowed pour range, and the commercial values.',
           style: AppTextStyles.caption,
         ),
@@ -669,7 +669,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         children: [
           Text('Bottle weights', style: AppTextStyles.heading),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Enter the empty and full bottle weights to finish product setup.',
             style: AppTextStyles.caption,
           ),
@@ -716,14 +716,14 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       children: [
         Text('Measure bottle', style: AppTextStyles.heading),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Choose a live coaster, capture the empty bottle first, then the full bottle.',
           style: AppTextStyles.caption,
         ),
         const SizedBox(height: 24),
         devicesAsync.when(
           loading: () => const LinearProgressIndicator(),
-          error: (_, __) => const Text(
+          error: (_, __) => Text(
             'Unable to load coasters',
             style: AppTextStyles.caption,
           ),

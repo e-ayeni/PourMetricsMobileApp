@@ -7,6 +7,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/devices_provider.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 class DevicesScreen extends ConsumerWidget {
   const DevicesScreen({super.key});
@@ -33,7 +34,7 @@ class DevicesScreen extends ConsumerWidget {
         ],
       ),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: PourLoadingIndicator()),
         error: (e, _) => ErrorView(
           message: 'Failed to load devices',
           onRetry: () => ref.invalidate(devicesListProvider),
@@ -49,11 +50,11 @@ class DevicesScreen extends ConsumerWidget {
               children: [
                 _DeviceOverview(
                     total: list.length, online: online, offline: offline),
-                const SizedBox(height: 20),
-                const Text('Your coasters', style: AppTextStyles.title),
-                const SizedBox(height: 12),
+                SizedBox(height: 20),
+                Text('Your coasters', style: AppTextStyles.title),
+                SizedBox(height: 12),
                 if (list.isEmpty)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 80),
                     child: Center(
                       child: Text('No coasters registered',
@@ -140,7 +141,7 @@ class _MetricTile extends StatelessWidget {
           Text(value,
               style: TextStyle(
                   fontSize: 22, fontWeight: FontWeight.w700, color: color)),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(label, style: AppTextStyles.caption),
         ],
       ),
@@ -196,7 +197,7 @@ class _DeviceCard extends StatelessWidget {
                   color: online ? AppColors.primaryDark : AppColors.textMuted,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +305,7 @@ class _DeviceCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text('Firmware $firmware · $mac', style: AppTextStyles.caption),
         ],
       ),
@@ -361,7 +362,7 @@ class _InfoTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppTextStyles.caption),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(value,
               style: AppTextStyles.body
                   .copyWith(fontWeight: FontWeight.w700, color: color)),
@@ -390,7 +391,7 @@ class _ContextCard extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, color: AppColors.primaryDark),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

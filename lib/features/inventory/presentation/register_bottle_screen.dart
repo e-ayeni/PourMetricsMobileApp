@@ -130,7 +130,7 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
               children: [
                 Text('Register a bottle', style: AppTextStyles.heading),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Start by capturing the bottle tag. Once the RFID is known, the rest of the registration details open up.',
                   style: AppTextStyles.caption,
                 ),
@@ -150,7 +150,7 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
                       else
                         devicesAsync.when(
                           loading: () => const LinearProgressIndicator(),
-                          error: (_, __) => const Text(
+                          error: (_, __) => Text(
                             'Failed to load coasters',
                             style: AppTextStyles.caption,
                           ),
@@ -286,7 +286,7 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
                                     subtitle: _selectedVenueName!,
                                   ),
                                 ),
-                              const Text('Bottle', style: AppTextStyles.label),
+                              Text('Bottle', style: AppTextStyles.label),
                               const SizedBox(height: 8),
                               if (_selectedProductId != null)
                                 _SelectedChip(
@@ -301,7 +301,7 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
                                 productsAsync.when(
                                   loading: () =>
                                       const LinearProgressIndicator(),
-                                  error: (_, __) => const Text(
+                                  error: (_, __) => Text(
                                     'Failed to load products',
                                     style: AppTextStyles.caption,
                                   ),
@@ -334,12 +334,12 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
                                   ),
                                 ),
                               const SizedBox(height: 20),
-                              const Text('Location',
+                              Text('Location',
                                   style: AppTextStyles.label),
                               const SizedBox(height: 8),
                               venuesAsync.when(
                                 loading: () => const LinearProgressIndicator(),
-                                error: (_, __) => const Text(
+                                error: (_, __) => Text(
                                   'Failed to load venues',
                                   style: AppTextStyles.caption,
                                 ),

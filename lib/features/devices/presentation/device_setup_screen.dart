@@ -31,7 +31,7 @@ class DeviceSetupScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Before you start',
+                      Text('Before you start',
                           style: AppTextStyles.title),
                       const SizedBox(height: 4),
                       Text(

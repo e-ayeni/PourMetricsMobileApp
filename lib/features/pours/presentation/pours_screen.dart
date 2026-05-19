@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/error_view.dart';
 import '../providers/pours_provider.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 class PoursScreen extends ConsumerWidget {
   const PoursScreen({super.key});
@@ -46,7 +47,7 @@ class PoursScreen extends ConsumerWidget {
           Expanded(
             child: poursAsync.when(
               loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+                  Center(child: PourLoadingIndicator()),
               error: (e, _) => ErrorView(
                 message: 'Failed to load pour events',
                 onRetry: () => ref.invalidate(poursListProvider),
@@ -57,7 +58,7 @@ class PoursScreen extends ConsumerWidget {
                   ref.read(poursPageProvider.notifier).state = 1;
                 },
                 child: pours.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text('No events match your filters',
                             style: AppTextStyles.caption))
                     : ListView.builder(
@@ -116,7 +117,7 @@ class _ActiveFilterBar extends StatelessWidget {
         children: [
           const Icon(Icons.calendar_today_outlined,
               size: 14, color: AppColors.textMuted),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Text(dateLabel, style: AppTextStyles.caption),
           if (filter.oversizeOnly) ...[
             const SizedBox(width: 8),
@@ -274,10 +275,10 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
 
           // Date range
-          const Text('Date Range', style: AppTextStyles.title),
+          Text('Date Range', style: AppTextStyles.title),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -303,10 +304,10 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
             ],
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Flag filters
-          const Text('Event Type', style: AppTextStyles.title),
+          Text('Event Type', style: AppTextStyles.title),
           const SizedBox(height: 12),
           SwitchListTile(
             value: _oversizeOnly,
@@ -387,13 +388,13 @@ class _PourEventTile extends StatelessWidget {
               child:
                   Icon(Icons.local_drink, color: AppColors.primaryDark),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(product, style: AppTextStyles.title),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(venue.isNotEmpty ? '$venue · $time' : time,
                       style: AppTextStyles.caption),
                   if (isOversize || isAfterHours) ...[

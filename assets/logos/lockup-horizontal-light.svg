@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 140" width="960" height="280">
+<rect width="480" height="140" fill="#FAF6F0"></rect>
+<g transform="translate(20 10)">
+  <defs>
+    <clipPath id="dropClipL"><path d="M60 18 C60 18, 30 52, 30 78 A30 30 0 0 0 90 78 C90 52, 60 18, 60 18 Z"></path></clipPath>
+  </defs>
+  <path d="M60 18 C60 18, 30 52, 30 78 A30 30 0 0 0 90 78 C90 52, 60 18, 60 18 Z" fill="none" stroke="#1A1208" stroke-width="3" stroke-linejoin="round"></path>
+  <g clip-path="url(#dropClipL)">
+    <rect x="0" y="68" width="120" height="50" fill="#C17D2B"></rect>
+    <path d="M0 68 Q30 62 60 68 T120 68 L120 75 L0 75 Z" fill="#C17D2B" fill-opacity="0.5"></path>
+  </g>
+  <g stroke="#1A1208" stroke-width="2" stroke-linecap="round">
+    <line x1="30" y1="64" x2="36" y2="64"></line>
+    <line x1="30" y1="74" x2="34" y2="74"></line>
+    <line x1="30" y1="84" x2="36" y2="84"></line>
+  </g>
+</g>
+<g font-family="Space Grotesk, Helvetica, Arial, sans-serif" fill="#1A1208">
+  <text x="150" y="76" font-size="44" font-weight="500" letter-spacing="-1">Pour<tspan font-weight="700">Metrics</tspan></text>
+  <text x="151" y="100" font-size="11" letter-spacing="2.4" fill="#C17D2B" font-weight="500">SMART COASTER NETWORK</text>
+</g>
+</svg>

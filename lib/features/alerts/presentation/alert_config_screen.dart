@@ -6,6 +6,7 @@ import '../../../core/providers/dio_provider.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/widgets/error_view.dart';
 import '../providers/alerts_provider.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 class AlertConfigScreen extends ConsumerStatefulWidget {
   const AlertConfigScreen({super.key});
@@ -104,7 +105,7 @@ class _AlertConfigScreenState extends ConsumerState<AlertConfigScreen> {
         ],
       ),
       body: configAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: PourLoadingIndicator()),
         error: (e, _) => ErrorView(
           message: 'Failed to load config',
           onRetry: () => ref.invalidate(alertConfigProvider),
@@ -119,9 +120,9 @@ class _AlertConfigScreenState extends ConsumerState<AlertConfigScreen> {
                 child: SwitchListTile(
                   value: _enabled ?? true,
                   onChanged: (v) => setState(() => _enabled = v),
-                  title: const Text('Alerts enabled',
+                  title: Text('Alerts enabled',
                       style: AppTextStyles.title),
-                  subtitle: const Text('Turn off to silence all alerts',
+                  subtitle: Text('Turn off to silence all alerts',
                       style: AppTextStyles.caption),
                   activeColor: AppColors.primaryDark,
                 ),
@@ -164,8 +165,8 @@ class _AlertConfigScreenState extends ConsumerState<AlertConfigScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('20 ml', style: AppTextStyles.caption),
-                        const Text('120 ml', style: AppTextStyles.caption),
+                        Text('20 ml', style: AppTextStyles.caption),
+                        Text('120 ml', style: AppTextStyles.caption),
                       ],
                     ),
                   ],

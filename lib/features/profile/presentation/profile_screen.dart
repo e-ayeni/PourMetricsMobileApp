@@ -7,6 +7,7 @@ import '../../../core/widgets/error_view.dart';
 import '../../../core/models/user_profile.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
+import '../../../core/widgets/pour_loading_indicator.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -18,7 +19,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: profileAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: PourLoadingIndicator()),
         error: (e, _) => ErrorView(
           message: 'Failed to load profile',
           onRetry: () => ref.invalidate(profileProvider),
@@ -84,7 +85,7 @@ class _ProfileBody extends ConsumerWidget {
         // ── Admin tools ───────────────────────────────────────────────────
         if (isAdmin) ...[
           const SizedBox(height: 28),
-          const Text('Administration', style: AppTextStyles.title),
+          Text('Administration', style: AppTextStyles.title),
           const SizedBox(height: 12),
           _AdminTile(
             icon: Icons.sensors,

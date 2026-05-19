@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../providers/auth_provider.dart';
@@ -57,23 +58,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.local_drink,
-                          color: AppColors.primary, size: 36),
-                      const SizedBox(width: 12),
-                      Text(
-                        'PourMetrics',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.merge(AppTextStyles.brandHeading),
-                      ),
-                    ],
+                  Center(
+                    child: SvgPicture.asset(
+                      'assets/logos/lockup-horizontal-light.svg',
+                      height: 64,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Smart Coaster Analytics',
-                      style: AppTextStyles.caption),
+                  Center(
+                    child: Text('Smart Coaster Analytics',
+                        style: AppTextStyles.caption),
+                  ),
                   const SizedBox(height: 48),
 
                   TextFormField(
