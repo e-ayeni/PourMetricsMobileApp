@@ -151,6 +151,76 @@ class BottlesNotifier extends AsyncNotifier<List<dynamic>> {
     }
   }
 
+  /// Moves a bottle between Stockroom and Bar via the dedicated location endpoint.
+  Future<void> moveBottleLocation(String id, String location) async {
+    final snapshot = state.valueOrNull ?? [];
+    state = AsyncData(snapshot.map((b) {
+      if (b['id'] == id) {
+        return {
+          ...b as Map<String, dynamic>,
+          'location': location,
+          'coasterName': null,
+        };
+      }
+      return b;
+    }).toList());
+
+    try {
+      final res = await _dio.put(
+        '${ApiConstants.bottles}/$id/location',
+        data: {'location': location},
+      );
+      await _replaceBottle(id, res.data as Map<String, dynamic>);
+    } catch (e) {
+      if (isOfflineError(e)) {
+        await _queue.enqueue(
+          mutationId: 'put_bottle_location_$id',
+          method: 'PUT',
+          path: '${ApiConstants.bottles}/$id/location',
+          payload: {'location': location},
+        );
+        ref.read(queueStatusProvider.notifier).refresh();
+      } else {
+        state = AsyncData(snapshot);
+        rethrow;
+      }
+    }
+  }
+
+  /// Assigns a bottle (currently at the Bar) to a table-service coaster.
+  Future<void> assignTableService(String id, String deviceId) async {
+    final snapshot = state.valueOrNull ?? [];
+    try {
+      final res = await _dio.post(
+        '${ApiConstants.bottles}/$id/table-service',
+        data: {'deviceId': deviceId},
+      );
+      await _replaceBottle(id, res.data as Map<String, dynamic>);
+    } catch (e) {
+      if (isOfflineError(e)) {
+        await _queue.enqueue(
+          mutationId: 'post_bottle_table_service_$id',
+          method: 'POST',
+          path: '${ApiConstants.bottles}/$id/table-service',
+          payload: {'deviceId': deviceId},
+        );
+        ref.read(queueStatusProvider.notifier).refresh();
+      } else {
+        state = AsyncData(snapshot);
+        rethrow;
+      }
+    }
+  }
+
+  Future<void> _replaceBottle(String id, Map<String, dynamic> updated) async {
+    final snapshot = state.valueOrNull ?? [];
+    state = AsyncData(snapshot.map((b) {
+      if (b['id'] == id) return {...b as Map<String, dynamic>, ...updated};
+      return b;
+    }).toList());
+    await _cache.write(_cacheKey, state.value!);
+  }
+
   /// Optimistically removes a bottle (retire).
   Future<void> retireBottle(String id) async {
     final snapshot = state.valueOrNull ?? [];

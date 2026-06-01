@@ -249,6 +249,12 @@ class _BottleDetailScreenState extends ConsumerState<BottleDetailScreen> {
                   InfoRow(label: 'Venue', value: venue),
                 ],
                 InfoRow(
+                  label: 'Status',
+                  value: _locationLabel(
+                      d['location'] as String? ?? 'Bar', coaster),
+                  valueColor: _locationColor(d['location'] as String? ?? 'Bar'),
+                ),
+                InfoRow(
                   label: 'Smart Coaster',
                   value: coaster != null
                       ? '$coaster${barLocation != null ? ' · $barLocation' : ''}'
@@ -292,6 +298,20 @@ class _BottleDetailScreenState extends ConsumerState<BottleDetailScreen> {
     );
   }
 }
+
+String _locationLabel(String location, String? coasterName) => switch (location) {
+      'Stockroom' => 'In stockroom',
+      'OnCoaster' => coasterName != null ? 'On coaster' : 'On coaster',
+      'TableService' => 'Table service',
+      _ => 'At bar',
+    };
+
+Color _locationColor(String location) => switch (location) {
+      'Stockroom' => AppColors.textMuted,
+      'OnCoaster' => AppColors.success,
+      'TableService' => AppColors.warning,
+      _ => AppColors.info,
+    };
 
 class _VenueDropdown extends ConsumerWidget {
   const _VenueDropdown({required this.currentId, required this.onChanged});

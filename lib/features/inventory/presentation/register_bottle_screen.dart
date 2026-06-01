@@ -43,6 +43,7 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
   String? _selectedVenueId;
   String? _selectedVenueName;
   String? _selectedDeviceName;
+  String _selectedLocation = 'Bar';
 
   bool get _tagCaptured => _rfidCtrl.text.trim().isNotEmpty;
 
@@ -86,6 +87,7 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
         'productId': _selectedProductId,
         'venueId': _selectedVenueId,
         'rfidTag': _rfidCtrl.text.trim(),
+        'location': _selectedLocation,
       };
       await ref.read(bottlesListProvider.notifier).addBottle(payload);
       if (!mounted) return;
@@ -371,11 +373,33 @@ class _RegisterBottleScreenState extends ConsumerState<RegisterBottleScreen> {
                                   },
                                 ),
                               ),
+                              const SizedBox(height: 20),
+                              Text('Where is this bottle?',
+                                  style: AppTextStyles.label),
+                              const SizedBox(height: 8),
+                              SegmentedButton<String>(
+                                segments: const [
+                                  ButtonSegment(
+                                    value: 'Stockroom',
+                                    label: Text('Stockroom'),
+                                    icon: Icon(Icons.inventory_2_outlined),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'Bar',
+                                    label: Text('Bar'),
+                                    icon: Icon(Icons.local_bar_outlined),
+                                  ),
+                                ],
+                                selected: {_selectedLocation},
+                                onSelectionChanged: (selection) => setState(
+                                    () => _selectedLocation = selection.first),
+                              ),
                               const SizedBox(height: 24),
                               _ReviewCard(
                                 product: _selectedProductName,
                                 tag: _rfidCtrl.text.trim(),
                                 venue: _selectedVenueName,
+                                location: _selectedLocation,
                               ),
                             ],
                           ),
@@ -563,11 +587,12 @@ class _SelectedChip extends StatelessWidget {
 }
 
 class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({this.product, this.tag, this.venue});
+  const _ReviewCard({this.product, this.tag, this.venue, this.location});
 
   final String? product;
   final String? tag;
   final String? venue;
+  final String? location;
 
   @override
   Widget build(BuildContext context) {
@@ -586,6 +611,7 @@ class _ReviewCard extends StatelessWidget {
           _ReviewRow(label: 'Product', value: product ?? 'Choose a product'),
           _ReviewRow(label: 'RFID', value: tag ?? 'Capture the tag first'),
           _ReviewRow(label: 'Venue', value: venue ?? 'Choose a venue'),
+          _ReviewRow(label: 'Location', value: location ?? 'Bar'),
         ],
       ),
     );

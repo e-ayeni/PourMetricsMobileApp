@@ -7,9 +7,10 @@ import '../../../core/widgets/bottle_fill_widget.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/services/queue_status_notifier.dart';
 import '../providers/inventory_provider.dart';
+import '../../devices/providers/devices_provider.dart';
 import '../../../core/widgets/pour_loading_indicator.dart';
 
-enum _BottleFilter { all, low, unassigned, recent }
+enum _BottleFilter { all, stockroom, bar, onCoaster, low }
 
 enum _ProductFilter { all, ready, needsSetup }
 
@@ -113,9 +114,10 @@ class _BottlesTab extends ConsumerWidget {
               value: filter,
               options: const [
                 (_BottleFilter.all, 'All'),
+                (_BottleFilter.stockroom, 'Stockroom'),
+                (_BottleFilter.bar, 'Bar'),
+                (_BottleFilter.onCoaster, 'On Coaster'),
                 (_BottleFilter.low, 'Low'),
-                (_BottleFilter.unassigned, 'Not on coaster'),
-                (_BottleFilter.recent, 'Recent'),
               ],
               onChanged: onFilterChanged,
             ),
@@ -152,29 +154,31 @@ class _BottlesTab extends ConsumerWidget {
           final pct = full > empty ? (weight - empty) / (full - empty) : 0;
           return pct <= 0.2;
         }).toList();
-      case _BottleFilter.unassigned:
-        return bottles.where((b) => b['coasterName'] == null).toList();
-      case _BottleFilter.recent:
-        return bottles.reversed.take(6).toList();
+      case _BottleFilter.stockroom:
+        return bottles.where((b) => b['location'] == 'Stockroom').toList();
+      case _BottleFilter.bar:
+        return bottles.where((b) => b['location'] == 'Bar').toList();
+      case _BottleFilter.onCoaster:
+        return bottles.where((b) => b['location'] == 'OnCoaster').toList();
       case _BottleFilter.all:
         return bottles;
     }
   }
 }
 
-class _BottleTile extends StatelessWidget {
+class _BottleTile extends ConsumerWidget {
   const _BottleTile({required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final id = data['id'] as String? ?? '';
     final product = data['productName'] as String? ?? 'Unknown';
     final rfid = data['rfidTag'] as String? ?? '';
     final venue = data['venueName'] as String? ?? '';
     final coaster = data['coasterName'] as String?;
-    final barLocation = data['barLocation'] as String?;
+    final location = data['location'] as String? ?? 'Bar';
     final weightG = (data['currentWeightG'] as num?)?.toDouble() ?? 0;
     final fullG = (data['fullWeightG'] as num?)?.toDouble() ?? 1;
     final emptyG = (data['emptyWeightG'] as num?)?.toDouble() ?? 0;
@@ -190,6 +194,9 @@ class _BottleTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => context.push('/inventory/bottle/$id'),
+        onLongPress: isRetired
+            ? null
+            : () => _showMovementSheet(context, ref, id, location, coaster),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
@@ -226,30 +233,7 @@ class _BottleTile extends StatelessWidget {
                     Text('RFID: $rfid', style: AppTextStyles.caption),
                     Text(venue, style: AppTextStyles.caption),
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          coaster != null ? Icons.sensors : Icons.sensors_off,
-                          size: 13,
-                          color: coaster != null
-                              ? AppColors.success
-                              : AppColors.textMuted,
-                        ),
-                        SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            coaster != null
-                                ? '$coaster${barLocation != null ? ' · $barLocation' : ''}'
-                                : 'Not on a coaster',
-                            style: AppTextStyles.caption.copyWith(
-                              color: coaster != null
-                                  ? AppColors.success
-                                  : AppColors.textMuted,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    _LocationBadge(location: location, coasterName: coaster),
                   ],
                 ),
               ),
@@ -259,6 +243,170 @@ class _BottleTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showMovementSheet(BuildContext context, WidgetRef ref, String id,
+      String location, String? coasterName) {
+    // OnCoaster and TableService are hardware-driven; no manual actions.
+    if (location == 'OnCoaster' || location == 'TableService') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This bottle is hardware-tracked. Remove it from the '
+              'coaster to move it manually.'),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        Future<void> run(Future<void> Function() action, String ok) async {
+          Navigator.pop(sheetContext);
+          try {
+            await action();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(ok), backgroundColor: AppColors.success),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text(e.toString()),
+                    backgroundColor: AppColors.error),
+              );
+            }
+          }
+        }
+
+        final notifier = ref.read(bottlesListProvider.notifier);
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (location == 'Stockroom')
+                ListTile(
+                  leading: const Icon(Icons.local_bar_outlined),
+                  title: const Text('Move to Bar'),
+                  onTap: () => run(
+                      () => notifier.moveBottleLocation(id, 'Bar'),
+                      'Moved to Bar.'),
+                ),
+              if (location == 'Bar') ...[
+                ListTile(
+                  leading: const Icon(Icons.inventory_2_outlined),
+                  title: const Text('Move to Stockroom'),
+                  onTap: () => run(
+                      () => notifier.moveBottleLocation(id, 'Stockroom'),
+                      'Moved to Stockroom.'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.sensors),
+                  title: const Text('Assign to Coaster'),
+                  subtitle: const Text('Place the bottle on the coaster to '
+                      'begin tracking'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.push('/inventory/bottle/$id');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.table_restaurant_outlined),
+                  title: const Text('Table Service'),
+                  onTap: () => _pickTableCoaster(context, ref, id, run),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickTableCoaster(
+      BuildContext context,
+      WidgetRef ref,
+      String id,
+      Future<void> Function(Future<void> Function(), String) run) async {
+    final devices =
+        ref.read(devicesListProvider).valueOrNull?.cast<Map<String, dynamic>>();
+    if (devices == null || devices.isEmpty) {
+      Navigator.maybePop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No coasters available.')),
+      );
+      return;
+    }
+
+    final deviceId = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text('Choose table coaster', style: AppTextStyles.title),
+            ),
+            ...devices.map((d) => ListTile(
+                  leading: const Icon(Icons.sensors),
+                  title: Text(d['coasterName'] as String? ??
+                      d['barLocation'] as String? ??
+                      'Coaster'),
+                  subtitle: Text(d['venueName'] as String? ?? ''),
+                  onTap: () => Navigator.pop(ctx, d['id'] as String?),
+                )),
+          ],
+        ),
+      ),
+    );
+
+    if (deviceId == null) return;
+    await run(
+        () => ref
+            .read(bottlesListProvider.notifier)
+            .assignTableService(id, deviceId),
+        'Assigned to table service.');
+  }
+}
+
+class _LocationBadge extends StatelessWidget {
+  const _LocationBadge({required this.location, this.coasterName});
+
+  final String location;
+  final String? coasterName;
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, icon, label) = switch (location) {
+      'Stockroom' => (AppColors.textMuted, Icons.inventory_2_outlined, 'Stockroom'),
+      'OnCoaster' => (
+          AppColors.success,
+          Icons.sensors,
+          coasterName ?? 'On coaster'
+        ),
+      'TableService' => (
+          AppColors.warning,
+          Icons.table_restaurant_outlined,
+          coasterName ?? 'Table service'
+        ),
+      _ => (AppColors.info, Icons.local_bar_outlined, 'At bar'),
+    };
+
+    return Row(
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTextStyles.caption.copyWith(color: color),
+          ),
+        ),
+      ],
     );
   }
 }
