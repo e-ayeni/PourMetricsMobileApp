@@ -7,7 +7,6 @@ import '../../../core/widgets/bottle_fill_widget.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/services/queue_status_notifier.dart';
 import '../providers/inventory_provider.dart';
-import '../../devices/providers/devices_provider.dart';
 import '../../../core/widgets/pour_loading_indicator.dart';
 
 enum _BottleFilter { all, stockroom, bar, onCoaster, low }
@@ -159,7 +158,11 @@ class _BottlesTab extends ConsumerWidget {
       case _BottleFilter.bar:
         return bottles.where((b) => b['location'] == 'Bar').toList();
       case _BottleFilter.onCoaster:
-        return bottles.where((b) => b['location'] == 'OnCoaster').toList();
+        // Includes table-service bottles — both are actively on a coaster.
+        return bottles
+            .where((b) =>
+                b['location'] == 'OnCoaster' || b['location'] == 'TableService')
+            .toList();
       case _BottleFilter.all:
         return bottles;
     }
@@ -313,11 +316,6 @@ class _BottleTile extends ConsumerWidget {
                     context.push('/inventory/bottle/$id');
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.table_restaurant_outlined),
-                  title: const Text('Table Service'),
-                  onTap: () => _pickTableCoaster(context, ref, id, run),
-                ),
               ],
             ],
           ),
@@ -326,51 +324,6 @@ class _BottleTile extends ConsumerWidget {
     );
   }
 
-  Future<void> _pickTableCoaster(
-      BuildContext context,
-      WidgetRef ref,
-      String id,
-      Future<void> Function(Future<void> Function(), String) run) async {
-    final devices =
-        ref.read(devicesListProvider).valueOrNull?.cast<Map<String, dynamic>>();
-    if (devices == null || devices.isEmpty) {
-      Navigator.maybePop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No coasters available.')),
-      );
-      return;
-    }
-
-    final deviceId = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text('Choose table coaster', style: AppTextStyles.title),
-            ),
-            ...devices.map((d) => ListTile(
-                  leading: const Icon(Icons.sensors),
-                  title: Text(d['coasterName'] as String? ??
-                      d['barLocation'] as String? ??
-                      'Coaster'),
-                  subtitle: Text(d['venueName'] as String? ?? ''),
-                  onTap: () => Navigator.pop(ctx, d['id'] as String?),
-                )),
-          ],
-        ),
-      ),
-    );
-
-    if (deviceId == null) return;
-    await run(
-        () => ref
-            .read(bottlesListProvider.notifier)
-            .assignTableService(id, deviceId),
-        'Assigned to table service.');
-  }
 }
 
 class _LocationBadge extends StatelessWidget {
