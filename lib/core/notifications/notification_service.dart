@@ -36,14 +36,24 @@ class NotificationService {
   final _localNotifications = FlutterLocalNotificationsPlugin();
   bool _initialised = false;
 
+  /// The most recent FCM token, available after [initialise].
+  String? latestToken;
+
+  void Function(String token)? _onToken;
+
   /// Call once from main() after Firebase.initializeApp().
   Future<void> initialise({
     /// Called when the user taps a notification while the app is open or
     /// in the background. Use [payload] to navigate to the relevant screen.
     void Function(String? payload)? onTap,
+
+    /// Called with the FCM token on first acquisition and on every refresh.
+    /// Wire this to POST the token to the backend once authenticated.
+    void Function(String token)? onToken,
   }) async {
     if (_initialised) return;
     _initialised = true;
+    _onToken = onToken;
 
     // ── Local notifications setup ─────────────────────────────────────────
     const android = AndroidInitializationSettings('@drawable/ic_notification');
@@ -95,12 +105,18 @@ class NotificationService {
       onTap?.call(jsonEncode(message.data));
     });
 
-    // Log the FCM token so you can send test pushes from Firebase console
+    // Acquire the token and surface it for backend registration.
     final token = await messaging.getToken();
-    debugPrint('[Notifications] FCM token: $token');
+    if (token != null) {
+      latestToken = token;
+      _onToken?.call(token);
+    }
 
-    // TODO: POST token to backend so the server can target this device
-    // await dio.post('/devices/fcm-token', data: {'token': token});
+    // Re-register whenever FCM rotates the token.
+    messaging.onTokenRefresh.listen((t) {
+      latestToken = t;
+      _onToken?.call(t);
+    });
   }
 
   /// Shows an immediate local notification (used for foreground + background).

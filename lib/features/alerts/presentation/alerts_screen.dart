@@ -66,7 +66,7 @@ class _AlertTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final type = data['type'] as String? ?? 'Alert';
+    final type = data['alertType'] as String? ?? data['type'] as String? ?? 'Alert';
     final message = data['message'] as String? ?? '';
     final isAcknowledged = data['isAcknowledged'] as bool? ?? false;
     final ts = data['triggeredAt'] as String?;

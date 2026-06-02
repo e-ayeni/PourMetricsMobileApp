@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'core/db/app_database.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-// ignore: unused_import — uncomment when Firebase is configured:
-// import 'package:firebase_core/firebase_core.dart';
-// import 'core/notifications/notification_service.dart';
+import 'core/notifications/notification_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,24 +12,44 @@ void main() async {
   // Eagerly open SQLite so the first cache read is fast.
   await AppDatabase.instance.pendingCount();
 
-  // TODO: Add google-services.json (Android) and GoogleService-Info.plist (iOS)
-  // from your Firebase project, then uncomment the two lines below.
-  //
-  // await Firebase.initializeApp();
-  // await NotificationService.instance.initialise(
-  //   onTap: (payload) {
-  //     // Navigate based on payload — e.g. push '/alerts' for alert payloads.
-  //   },
-  // );
+  // Initialise Firebase + push notifications. Guarded so a missing
+  // google-services.json / GoogleService-Info.plist (e.g. local dev before
+  // Firebase is configured) doesn't crash launch — notifications simply stay
+  // off until the config is added.
+  var notificationsReady = false;
+  try {
+    await Firebase.initializeApp();
+    notificationsReady = true;
+  } catch (e) {
+    debugPrint('[Startup] Firebase not configured; notifications disabled: $e');
+  }
 
-  runApp(const ProviderScope(child: PourMetricsApp()));
+  runApp(ProviderScope(
+    child: PourMetricsApp(notificationsReady: notificationsReady),
+  ));
 }
 
-class PourMetricsApp extends ConsumerWidget {
-  const PourMetricsApp({super.key});
+class PourMetricsApp extends ConsumerStatefulWidget {
+  const PourMetricsApp({super.key, this.notificationsReady = false});
+
+  final bool notificationsReady;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PourMetricsApp> createState() => _PourMetricsAppState();
+}
+
+class _PourMetricsAppState extends ConsumerState<PourMetricsApp> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.notificationsReady) {
+      // Fire-and-forget; the controller handles auth timing + token refresh.
+      ref.read(notificationControllerProvider).init();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
       title: 'PourMetrics',
