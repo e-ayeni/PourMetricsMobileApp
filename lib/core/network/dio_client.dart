@@ -1,14 +1,6 @@
 import 'package:dio/dio.dart';
 import '../constants/api_constants.dart';
 import '../storage/secure_storage.dart';
-import 'mock_interceptor.dart';
-
-// TODO: remove before release — keep in sync with auth_provider.dart
-// false → app hits the real backend; the JWT auth interceptor handles tokens
-//          and the UI reflects whatever the backend actually returns.
-// true  → MockInterceptor short-circuits every request with hardcoded
-//          sample users/products/bottles; useful for UI work without a server.
-const _bypassAuth = false;
 
 Dio createDioClient() {
   final dio = Dio(BaseOptions(
@@ -18,12 +10,7 @@ Dio createDioClient() {
     headers: {'Content-Type': 'application/json'},
   ));
 
-  if (_bypassAuth) {
-    // MockInterceptor runs first and short-circuits all requests with fake data.
-    dio.interceptors.add(MockInterceptor());
-  } else {
-    dio.interceptors.add(_AuthInterceptor(dio));
-  }
+  dio.interceptors.add(_AuthInterceptor(dio));
 
   return dio;
 }
