@@ -23,9 +23,11 @@ class DevicesScreen extends ConsumerWidget {
         actions: [
           if (isAdmin)
             IconButton(
-              icon: const Icon(Icons.add),
-              tooltip: 'Set up new coaster',
-              onPressed: () => context.push('/devices/setup'),
+              icon: const Icon(Icons.qr_code_scanner),
+              tooltip: 'Add coaster',
+              // Entry point for the new flow: scan QR → claim → Wi-Fi setup.
+              // The old /devices/setup route still works for users mid-flow.
+              onPressed: () => context.push('/devices/claim'),
             ),
           IconButton(
             icon: const Icon(Icons.refresh),
