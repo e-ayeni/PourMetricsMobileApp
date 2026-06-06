@@ -12,6 +12,7 @@ class ApiConstants {
 
   static const String venues = '/venues';
   static const String devices = '/devices';
+  static const String deviceClaim = '/devices/claim';
   static const String products = '/products';
   static const String productCalibrationSessions =
       '/products/calibration-sessions';

@@ -11,11 +11,11 @@ class DeviceSetupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Set Up New Coaster')),
+      appBar: AppBar(title: const Text('Connect to Wi-Fi')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // Intro
+          // Intro — assumes the user just arrived from a successful QR claim.
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -31,12 +31,12 @@ class DeviceSetupScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Before you start',
+                      Text('Coaster claimed — almost there',
                           style: AppTextStyles.title),
                       const SizedBox(height: 4),
                       Text(
-                        'Power on the coaster. The LED will pulse blue '
-                        'while it waits to be configured.',
+                        'Now connect the coaster to your venue Wi-Fi. The LED '
+                        'will pulse blue while it waits to be configured.',
                         style: AppTextStyles.caption,
                       ),
                     ],
@@ -77,18 +77,20 @@ class DeviceSetupScreen extends StatelessWidget {
           _Step(
             number: 3,
             icon: Icons.edit_outlined,
-            title: 'Enter your network details',
-            body: 'Fill in your venue\'s Wi-Fi name, password, and the '
-                'PourMetrics backend URL, then tap Save & Connect.',
+            title: 'Enter your Wi-Fi details',
+            body: 'Fill in your venue\'s Wi-Fi name and password, then tap '
+                'Save & Connect. (Coasters always talk to PourMetrics directly '
+                '— you don\'t need to configure a server address.)',
           ),
 
           _Step(
             number: 4,
             icon: Icons.check_circle_outline,
             title: 'Done',
-            body: 'The coaster will reboot and connect to your network. '
-                'Reconnect your phone to your normal Wi-Fi — '
-                'the coaster will appear here within a minute.',
+            body: 'The coaster will reboot, connect to your network, and '
+                'register itself against the claim you placed when scanning the '
+                'QR sticker. Reconnect your phone to your normal Wi-Fi — '
+                'the coaster will appear in Devices within a minute.',
             isLast: true,
           ),
 
