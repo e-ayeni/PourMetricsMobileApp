@@ -3,8 +3,10 @@ import '../../../core/storage/secure_storage.dart';
 import '../data/auth_repository.dart';
 import '../domain/auth_state.dart';
 
-// TODO: remove before release
-const _bypassAuth = true;
+// TODO: remove before release — keep in sync with core/network/dio_client.dart
+// false → real login flow; user must authenticate against the backend.
+// true  → auto-signs in as a fake Admin and skips the login screen.
+const _bypassAuth = false;
 
 class AuthNotifier extends AsyncNotifier<AuthState> {
   @override
