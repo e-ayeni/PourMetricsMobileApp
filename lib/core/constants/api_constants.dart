@@ -1,7 +1,12 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = 'http://localhost:5000/api/v1';
+  // Production backend. For local development override with:
+  //   flutter run --dart-define=API_BASE_URL=http://192.168.x.x:5013/api/v1
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://api.pourmetrics.uk/api/v1',
+  );
 
   static const String login = '/auth/login';
   static const String refresh = '/auth/refresh';
